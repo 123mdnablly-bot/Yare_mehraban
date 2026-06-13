@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>یار مهربان | نسخه ۰.۸ نهایی</title>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- کتابخانه‌های خارجی -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        *{box-sizing:border-box;font-family:system-ui,'Segoe UI',Tahoma,'Vazir',sans-serif;}
+        body{background:#e9f0f5;margin:0;padding:20px;transition:background 0.3s, color 0.3s;}
+        body.dark{background:#1e2a3a;color:#e2e8f0;}
+        body.green{background:#d1f7d1;color:#1a3b1a;}
+        body.gold{background:#fff8e7;color:#5c3d00;}
+        body.blue{background:#d4e6ff;color:#002e5c;}
+        body.dark .app-container{background:#2d3748;color:#e2e8f0;}
+        body.green .app-container{background:#d0f0d0;color:#1a3b1a;}
+        body.gold .app-container{background:#fff0cc;color:#5c3d00;}
+        body.blue .app-container{background:#cce4ff;color:#002e5c;}
+        body.dark .card{background:#1a202c;border-color:#4a5568;}
+        body.green .card{background:#e0f8e0;border-color:#6b8e6b;}
+        body.gold .card{background:#fff6e0;border-color:#d4a017;}
+        body.blue .card{background:#e0f0ff;border-color:#4a7db0;}
+        body.dark .submenu{background:#2d3748;}
+        body.green .submenu{background:#d0f0d0;}
+        body.gold .submenu{background:#fff0cc;}
+        body.blue .submenu{background:#cce4ff;}
+        body.dark input,body.dark select,body.dark textarea{background:#4a5568;color:white;border-color:#718096;}
+        body.green input,body.green select,body.green textarea{background:#f0fff0;color:#1a3b1a;border-color:#6b8e6b;}
+        body.gold input,body.gold select,body.gold textarea{background:#fffaf0;color:#5c3d00;border-color:#d4a017;}
+        body.blue input,body.blue select,body.blue textarea{background:#f0f8ff;color:#002e5c;border-color:#4a7db0;}
+        .app-container{max-width:1200px;margin:0 auto;background:white;border-radius:28px;box-shadow:0 8px 20px rgba(0,0,0,0.1);overflow:hidden;padding:20px;}
+        .logo-header{display:flex;justify-content:space-between;align-items:center;background:#2c3e50;margin:-20px -20px 20px -20px;padding:10px 20px;border-radius:0 0 28px 28px;color:white;}
+        body.green .logo-header{background:#2d6a2d;}
+        body.gold .logo-header{background:#b8860b;}
+        body.blue .logo-header{background:#1e6f9f;}
+        .theme-toggle{background:#f39c12;border:none;border-radius:40px;padding:5px 12px;cursor:pointer;}
+        .notification-badge{background:#e74c3c;color:white;border-radius:20px;padding:2px 8px;font-size:0.7rem;margin-right:5px;}
+        button,.btn{background:#2c7da0;border:none;color:white;padding:8px 16px;border-radius:40px;cursor:pointer;margin:4px;font-weight:bold;}
+        body.green button, body.green .btn{background:#2d6a2d;}
+        body.gold button, body.gold .btn{background:#b8860b;}
+        body.blue button, body.blue .btn{background:#1e6f9f;}
+        .btn-danger{background:#c44536;}.btn-success{background:#2c7a4d;}.btn-warning{background:#e68a2e;}.btn-purple{background:#8b5cf6;}
+        .flex{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .card{background:#f8fafc;border-radius:20px;padding:12px;margin-bottom:16px;border:1px solid #e2e8f0;}
+        .submenu{background:#f0f0f0;border-radius:20px;padding:8px;margin:10px 0;}
+        .submenu summary{font-weight:bold;cursor:pointer;padding:5px;list-style:none;}
+        .user-row{background:#fff;border-radius:30px;padding:8px 12px;margin:8px 0;display:flex;justify-content:space-between;flex-wrap:wrap;}
+        .profile-img{width:80px;height:80px;border-radius:50%;}
+        .game-card{background:linear-gradient(115deg,#fff2e0,#ffe3c4);border-radius:42px;padding:15px;margin:14px 0;cursor:pointer;}
+        .opt-btn{background:#5b3e24;border-radius:60px;padding:8px;margin:6px;text-align:center;font-weight:bold;color:#ffe0b5;cursor:pointer;}
+        .timer-box{background:#000000aa;color:#ffaa55;font-size:1.8rem;width:140px;text-align:center;border-radius:60px;margin:8px auto;}
+        .player-card{background:#2a241d;border-radius:40px;padding:5px 12px;color:#ffd9a5;display:inline-block;margin:5px;}
+        table{width:100%;border-collapse:collapse;margin:10px 0;}
+        th,td{border:1px solid #ccc;padding:6px;text-align:center;} th{background:#2c7da0;color:white;}
+        body.green th{background:#2d6a2d;}
+        body.gold th{background:#b8860b;}
+        body.blue th{background:#1e6f9f;}
+        .reminder-box{background:#fff3cd;border-right:4px solid #ffc107;padding:8px;border-radius:16px;margin-bottom:12px;}
+        .achievement-badge{display:inline-block;background:#f1c40f;color:#2c3e50;border-radius:30px;padding:4px 12px;margin:4px;font-size:0.8rem;}
+        .gallery-image{width:120px;height:120px;object-fit:cover;border-radius:16px;margin:5px;cursor:pointer;}
+        .class-card{border-right:4px solid #2c7da0;margin-bottom:12px;}
+        .memory-card{width:100px;height:100px;background:#e2e8f0;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;margin:5px;transition:0.2s;}
+        .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:1000;}
+        .modal-content{background:white;border-radius:28px;padding:20px;max-width:90%;text-align:center;}
+        .qr-canvas{display:inline-block;margin:10px auto;}
+        .crossword-grid{display:grid;gap:2px;background:#ccc;padding:5px;border-radius:10px;margin:10px auto;justify-content:center;}
+        .crossword-cell{width:40px;height:40px;background:#fff;border:1px solid #999;text-align:center;font-size:1.2rem;}
+        .crossword-cell input{width:100%;height:100%;text-align:center;border:none;font-size:1.2rem;}
+        @media print { body * { visibility: hidden; } .print-report, .print-report * { visibility: visible; } .print-report { position: absolute; top: 0; right: 0; width: 100%; background: white; padding: 20px; } }
+        @media (max-width:700px){.title{font-size:1rem;}}
+    </style>
+</head>
+<body>
+<div class="app-container" id="app">
+    <div class="logo-header">
+        <div class="flag-icon">🇮🇷</div>
+        <div class="title">یار مهربان | نسخه ۰.۸</div>
+        <div style="display:flex; gap:5px;">
+            <select id="themeSelect" style="border-radius:40px; padding:5px;">
+                <option value="default">تم آبی</option>
+                <option value="dark">تم شب</option>
+                <option value="green">تم سبز</option>
+                <option value="gold">تم طلایی</option>
+            </select>
+            <button id="themeToggle" class="theme-toggle">🌙</button>
+        </div>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Flag_of_Iran.svg/60px-Flag_of_Iran.svg.png" style="height:40px;" alt="پرچم">
+    </div>
+    <div id="login-view"><div class="card"><h3>ورود به سامانه</h3><input type="text" id="login-username" placeholder="نام کاربری"><input type="password" id="login-password" placeholder="رمز عبور"><button id="login-btn" class="btn-success">ورود</button><div id="login-error" style="color:red; text-align:center; margin-top:10px;"></div><hr><button id="showStatusBtn" class="btn">🔍 وضعیت حافظه</button></div></div>
+    <div id="main-view" style="display:none;"><div class="flex" style="justify-content: space-between;"><h2 id="welcome-msg"></h2><div><span id="notificationIcon" style="cursor:pointer;">🔔</span><span id="unreadCount" class="notification-badge" style="display:none;">0</span><button id="logout-btn">خروج</button></div></div><div id="reminder-area" class="reminder-box" style="display:none;"></div><div id="menu-buttons" class="flex"></div><div id="content-area"></div></div>
+</div>
+<script>
+    // ======================== داده‌های اصلی ========================
+    let users = [
+        { id:13, username:"Mohammad1384", password:"Mohammad1384", role:"admin", fullName:"مدیر ارشد", score:Infinity, group:"A", image:null, emoji:"👨‍💼", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF13", referredBy:null, classes:[], governorGroup:null },
+        { id:14, username:"Mjd", password:"mjd123", role:"prime_minister", fullName:"محمد جواد عظیمائی", score:760, group:"A", image:null, emoji:"🧑‍⚖️", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF14", referredBy:null, classes:[], governorGroup:null },
+        { id:15, username:"Raf", password:"raf123", role:"supreme_advisor", fullName:"روهان عسکری فاتح", score:955, group:"B", image:null, emoji:"🧠", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF15", referredBy:null, classes:[], governorGroup:null },
+        { id:16, username:"Ama", password:"ama123", role:"interior_minister", fullName:"امیر عباس عفیفه", score:780, group:"C", image:null, emoji:"👮", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF16", referredBy:null, classes:[], governorGroup:null },
+        { id:17, username:"Mgy", password:"mjy123", role:"support_minister", fullName:"محمد گرجی", score:500, group:"D", image:null, emoji:"🛠️", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF17", referredBy:null, classes:[], governorGroup:null },
+        { id:100, username:"Deputy", password:"deputy123", role:"deputy", fullName:"جانشین کانون", score:0, group:null, image:null, emoji:"⚙️", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF100", referredBy:null, classes:[], governorGroup:null },
+        { id:4, username:"Arash", password:"arash123", role:"teen", fullName:"آرش رمضانی سوته", score:555, group:"A", parentId:20, image:null, emoji:"🧒", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF4", referredBy:null, classes:[], governorGroup:"G1" },
+        { id:8, username:"Mtr", password:"mtr123", role:"teen", fullName:"محمد طاها رشیدی", score:605, group:"A", parentId:20, image:null, emoji:"🧒", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF8", referredBy:null, classes:[], governorGroup:"G1" },
+        { id:9, username:"Haf", password:"haf123", role:"teen", fullName:"حسین عفیفه", score:655, group:"B", parentId:21, image:null, emoji:"🧒", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF9", referredBy:null, classes:[], governorGroup:"G2" },
+        { id:10, username:"Aan", password:"aan123", role:"teen", fullName:"علی عباسعلی نتاج", score:560, group:"B", parentId:21, image:null, emoji:"🧒", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF10", referredBy:null, classes:[], governorGroup:"G2" },
+        { id:11, username:"Amh", password:"amh123", role:"teen", fullName:"آرین محمد حسین زاده", score:400, group:"A", parentId:20, image:null, emoji:"🧒", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF11", referredBy:null, classes:[], governorGroup:"G1" },
+        { id:12, username:"Amv", password:"amv123", role:"teen", fullName:"امير حسین ولی زاده", score:350, group:"B", parentId:21, image:null, emoji:"🧒", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF12", referredBy:null, classes:[], governorGroup:"G2" },
+        { id:18, username:"Ygz", password:"ygz123", role:"teen", fullName:"یاسین قلي زاده", score:0, group:null, parentId:null, image:null, emoji:"🧒", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF18", referredBy:null, classes:[], governorGroup:null },
+        { id:19, username:"Nan", password:"nan123", role:"teen", fullName:"نیکان ابراهیمیان", score:0, group:null, parentId:null, image:null, emoji:"🧒", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF19", referredBy:null, classes:[], governorGroup:null },
+        { id:20, username:"M_arash", password:"marash123", role:"parent", fullName:"مادر آرش و محمد طاها", score:0, group:null, image:null, emoji:"👩", childrenIds:[4,8], personalNote:"", achievements:[], referralCode:"REF20", referredBy:null, classes:[], governorGroup:null },
+        { id:21, username:"parent_hosein", password:"parent456", role:"parent", fullName:"والد حسین و علی", score:0, group:null, image:null, emoji:"👪", childrenIds:[9,10], personalNote:"", achievements:[], referralCode:"REF21", referredBy:null, classes:[], governorGroup:null },
+        { id:22, username:"Governor1", password:"gov123", role:"governor", fullName:"فرماندار گروه G1", score:0, group:null, image:null, emoji:"👑", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF22", referredBy:null, classes:[], governorGroup:"G1" },
+        { id:23, username:"Governor2", password:"gov456", role:"governor", fullName:"فرماندار گروه G2", score:0, group:null, image:null, emoji:"👑", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF23", referredBy:null, classes:[], governorGroup:"G2" }
+    ];
+    let programs = [ { name:"اردوي مجتمع تفریحی و فرهنگی کوثر", date:"1404/02/10", time:"9_18", desc:"هزینه ۱۵۰ هزار تومان", repeat:"" }, { name:"دورهمی جمعه در ساحل پارکینگ هفتم", date:"1404/02/15", time:"18", desc:"برنامه جایگزین", repeat:"" } ];
+    let puzzles = [ { question:"اولین سوره نازل شده بر پیامبر اکرم ص چه بود؟", answer:"علق", points:10 }, { question:"قرآن کریم چند سوره دارد؟", answer:"۱۱۴", points:5 } ];
+    let solvedPuzzles = [];
+    let messages = [ { id:1780997971728, fromId:13, toId:14, text:"سلام", date:"09/06/2026, 13:09:31", isRead:true }, { id:1780998010586, fromId:14, toId:13, text:"سلام استاد", date:"09/06/2026, 13:10:10", isRead:true } ];
+    let chatMemory = { learned: {} };
+    let quizzes = [{ id: 1781023828601, title: "آزمون جانشینی مرحله اول", questions: [] }];
+    let quizResults = [];
+    let attendance = {};
+    let ministerApproval = {};
+    let advisorEvaluation = {};
+    let parentFeedbacks = [];
+    let examSettings = { timeLimit: 30 };
+    let polls = [];
+    let tasks = [];
+    let notifications = [];
+    let activityLog = [];
+    let userReferrals = {};
+    let transactions = [];
+    let gallery = [ { id:1001, url:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Flag_of_Iran.svg/120px-Flag_of_Iran.svg.png", title:"پرچم ایران", date:"۱۴۰۳/۰۱/۰۱" } ];
+    let classes = [ { id:2001, name:"کلاس قرآن کریم", teacher:"استاد رحیمی", schedule:"شنبه و دوشنبه ۱۶-۱۸", students:[4,8,9,10], grades:[] } ];
+    let currentUser = null;
+    let chatbotPatterns = [];
+    let activeQuizTimer = null;
+    let tournament = { active: false, groupA: [], groupB: [], currentQuestion: null, scoreA: 0, scoreB: 0, turn: "A", questions: [] };
+    let najatState = { stage:"setup", players:[], currentPlayer:0, usedQuestions:{easy:[],medium:[],hard:[]}, currentQ:null, timer:20, timerInt:null, level:"easy", levelIdx:0, keys:0 };
+    const easyQ = [ { text:"بزرگترین سیاره منظومه شمسی؟", options:["زمین","مریخ","مشتری","زحل"], correct:"مشتری" }, { text:"۱۲×۸ چند است؟", options:["۸۴","۹۶","۱۰۸","۱۱۲"], correct:"۹۶" } ];
+    const mediumQ = [ { text:"مساحت مربع به ضلع ۷؟", options:["۲۸","۴۹","۱۴","۲۱"], correct:"۴۹" } ];
+    const hardQ = [ { text:"غدیر خم چه روزی است؟", options:["۱۸ ذی‌الحجه","۲۱ رمضان","۱ محرم","۱۳ رجب"], correct:"۱۸ ذی‌الحجه" } ];
+    const qMap = { easy:easyQ, medium:mediumQ, hard:hardQ };
+    let memoryCards = [], memoryFlipped = [], memoryLocked = false, memoryFirstCard = null, memorySecondCard = null, memoryMatched = [], memoryScore = 0;
+    let hangmanWord = "", hangmanGuessed = [], hangmanWrong = 0, hangmanMaxWrong = 6, hangmanWords = ["قرآن", "مدیریت", "دانش", "اخلاق", "نماز", "مسجد", "کعبه", "امام"];
+    const achievementsList = [ { id: "puzzle5", title: "🧩 معماگشا", desc: "حل ۵ معما", condition: (user) => solvedPuzzles.filter(sp=>sp.userId===user.id).length >= 5 }, { id: "score1000", title: "🏅 امتیازآور", desc: "کسب ۱۰۰۰ امتیاز", condition: (user) => user.score >= 1000 } ];
+    let autoSaveInterval = null;
+
+    // =============== توابع پایه ===============
+    function saveToLocal(){ localStorage.setItem("yare_data", JSON.stringify({ users, programs, puzzles, solvedPuzzles, messages, chatMemory, quizzes, quizResults, attendance, ministerApproval, advisorEvaluation, parentFeedbacks, examSettings, polls, tasks, notifications, activityLog, userReferrals, transactions, gallery, classes })); }
+    function loadFromLocal(){ let saved = localStorage.getItem("yare_data"); if(saved){ let d = JSON.parse(saved); if(d.users) users = d.users; if(d.programs) programs = d.programs; if(d.puzzles) puzzles = d.puzzles; if(d.solvedPuzzles) solvedPuzzles = d.solvedPuzzles; if(d.messages) messages = d.messages; if(d.chatMemory) chatMemory = d.chatMemory; if(d.quizzes) quizzes = d.quizzes; if(d.quizResults) quizResults = d.quizResults; if(d.attendance) attendance = d.attendance; if(d.ministerApproval) ministerApproval = d.ministerApproval; if(d.advisorEvaluation) advisorEvaluation = d.advisorEvaluation; if(d.parentFeedbacks) parentFeedbacks = d.parentFeedbacks; if(d.examSettings) examSettings = d.examSettings; if(d.polls) polls = d.polls; if(d.tasks) tasks = d.tasks; if(d.notifications) notifications = d.notifications; if(d.activityLog) activityLog = d.activityLog; if(d.userReferrals) userReferrals = d.userReferrals; if(d.transactions) transactions = d.transactions; if(d.gallery) gallery = d.gallery; if(d.classes) classes = d.classes; } }
+    function authenticate(u,p){ return users.find(user=>user.username===u && user.password===p); }
+    function updateWelcome(){ let scoreDisplay = (currentUser.score === Infinity || currentUser.score === "Infinity") ? "∞" : currentUser.score; document.getElementById('welcome-msg').innerHTML = `خوش آمدی ${currentUser.fullName} (امتیاز: ${scoreDisplay})`; updateUnreadCount(); }
+    function setTheme(theme){ document.body.classList.remove('dark','green','gold','blue'); if(theme !== 'default') document.body.classList.add(theme); localStorage.setItem("theme", theme); }
+    function initTheme(){ let savedTheme = localStorage.getItem("theme") || "default"; setTheme(savedTheme); document.getElementById("themeSelect").value = savedTheme; document.getElementById("themeSelect").onchange = (e) => setTheme(e.target.value); document.getElementById("themeToggle").onclick = () => { if(document.body.classList.contains('dark')) setTheme('default'); else setTheme('dark'); document.getElementById("themeSelect").value = document.body.classList.contains('dark')?'dark':'default'; }; }
+    function addNotification(userId, title, body, link){ let notif = { id: Date.now(), userId, title, body, link, isRead: false, date: new Date().toLocaleString() }; notifications.push(notif); saveToLocal(); if(currentUser && currentUser.id === userId) updateUnreadCount(); }
+    function updateUnreadCount(){ let unread = notifications.filter(n => n.userId === currentUser.id && !n.isRead).length; let badge = document.getElementById("unreadCount"); if(unread > 0){ badge.innerText = unread; badge.style.display = "inline-block"; } else badge.style.display = "none"; }
+    function showNotifications(){ let userNotifs = notifications.filter(n => n.userId === currentUser.id).reverse(); let html = `<div class="card"><h3>🔔 اعلان‌ها</h3><div id="notifList">`; if(userNotifs.length === 0) html += "<p>هیچ اعلانی وجود ندارد.</p>"; userNotifs.forEach(n => { html += `<div class="user-row" style="background:${n.isRead?'#e9ecef':'#fff3cd'}; margin-bottom:8px;"><div><strong>${n.title}</strong><br>${n.body}<br><small>${n.date}</small></div>${!n.isRead ? `<button class="btn-success" data-id="${n.id}">خوانده شد</button>` : ''}${n.link ? `<button class="btn" data-link="${n.link}">مشاهده</button>` : ''}</div>`; }); html += `</div><button id="markAllRead" class="btn-warning">همه خوانده شد</button><button id="closeNotif" class="btn">بستن</button></div>`; document.getElementById('content-area').innerHTML = html; document.querySelectorAll('[data-id]').forEach(btn => { btn.onclick = () => { let id = parseInt(btn.dataset.id); let notif = notifications.find(n=>n.id===id); if(notif) notif.isRead = true; saveToLocal(); showNotifications(); updateUnreadCount(); }; }); document.querySelectorAll('[data-link]').forEach(btn => { btn.onclick = () => { let link = btn.dataset.link; if(link === "polls") showPollManagement(); else if(link === "tasks") showTaskManagement(); else if(link === "programs") showManagePrograms(); else renderMainMenu(); }; }); document.getElementById('markAllRead').onclick = () => { notifications.forEach(n => { if(n.userId === currentUser.id) n.isRead = true; }); saveToLocal(); showNotifications(); updateUnreadCount(); }; document.getElementById('closeNotif').onclick = () => renderMainMenu(); }
+    function checkAndGrantAchievements(userId){ let user = users.find(u=>u.id===userId); if(!user) return; for(let ach of achievementsList){ if(!user.achievements.includes(ach.id) && ach.condition(user)){ user.achievements.push(ach.id); addNotification(userId, "🏆 دستاورد جدید", `شما موفق به دریافت مدال "${ach.title}" شدید!`, ""); } } saveToLocal(); }
+    function showUserAchievements(userId){ let user = users.find(u=>u.id===userId); if(!user) return; let earned = user.achievements || []; let html = `<div class="card"><h3>🏆 دستاوردهای ${user.fullName}</h3><div class="flex">`; for(let ach of achievementsList){ let has = earned.includes(ach.id); html += `<div class="achievement-badge" style="background:${has?'#f1c40f':'#95a5a6'};">${ach.title} ${has?'✅':'❌'}<br><small>${ach.desc}</small></div>`; } html += `</div><button class="btn" onclick="renderMainMenu()">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; }
+    function addActivityLog(userId, action, details){ activityLog.push({ userId, action, details, date: new Date().toLocaleString() }); saveToLocal(); }
+    function showUserActivity(userId){ let userLogs = activityLog.filter(l=>l.userId===userId).reverse(); let html = `<div class="card"><h3>📜 تاریخچه فعالیت‌های ${users.find(u=>u.id===userId)?.fullName}</h3>`; if(userLogs.length===0) html += "<p>هیچ فعالیتی ثبت نشده است.</p>"; else { html += `<table style="width:100%"><thead><tr><th>تاریخ</th><th>فعالیت</th><th>جزئیات</th></tr></thead><tbody>`; userLogs.forEach(log => { html += `<tr><td>${log.date}</td><td>${log.action}</td><td>${log.details || ''}‌</td></tr>`; }); html += `</tbody></table>`; } html += `<button class="btn" onclick="renderMainMenu()">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; }
+    function showDateConverter(){ let html = `<div class="card"><h3>🔄 تبدیل تاریخ شمسی و میلادی</h3><div class="flex"><input type="text" id="jalaliInput" placeholder="تاریخ شمسی (مثال: 1403/12/25)"><button id="toGregorian">به میلادی</button></div><div id="gregorianResult"></div><hr><div class="flex"><input type="text" id="gregorianInput" placeholder="تاریخ میلادی (مثال: 2025/03/16)"><button id="toJalali">به شمسی</button></div><div id="jalaliResult"></div><button class="btn" onclick="renderMainMenu()">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; document.getElementById('toGregorian').onclick = () => { document.getElementById('gregorianResult').innerHTML = "تبدیل دقیق نیاز به الگوریتم دارد. لطفاً از تقویم آنلاین کمک بگیرید."; }; document.getElementById('toJalali').onclick = () => { document.getElementById('jalaliResult').innerHTML = "تبدیل دقیق نیاز به الگوریتم دارد."; }; }
+    function printUserReport(userId){ let user = users.find(u=>u.id===userId); if(!user) return; let presentCount = Object.values(attendance).filter(day => day[user.username] === 'present').length; let userQuizzes = quizResults.filter(r=>r.userId===userId).map(q=>`${quizzes.find(qz=>qz.id===q.quizId)?.title||'بدون عنوان'}: ${q.score}`); let userTasks = tasks.filter(t=>t.completedBy.includes(userId)).map(t=>t.title); let win = window.open('', '_blank'); win.document.write(`<html dir="rtl"><head><title>کارنامه ${user.fullName}</title><style>body{font-family:sans-serif;padding:20px;} .card{max-width:600px;margin:auto;border:2px solid #2c7da0;border-radius:20px;padding:20px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:6px;}</style></head><body><div class="card"><h2 style="text-align:center;">کارنامه ${user.fullName}</h2><p><strong>نقش:</strong> ${user.role} | <strong>گروه:</strong> ${user.group||'—'} | <strong>امتیاز کل:</strong> ${user.score===Infinity?'∞':user.score}</p><h3>حضور و غیاب</h3><p>تعداد حضور: ${presentCount}</p><h3>آزمون‌ها</h3><p>${userQuizzes.join('<br>') || 'هیچ'}</p><h3>وظایف انجام شده</h3><p>${userTasks.join('<br>') || 'هیچ'}</p><h3>دستاوردها</h3><p>${(user.achievements||[]).map(a=>achievementsList.find(ac=>ac.id===a)?.title).join('<br>') || 'هیچ'}</p><div style="text-align:center; margin-top:20px;">تاریخ چاپ: ${new Date().toLocaleDateString('fa-IR')}</div></div></body></html>`); win.print(); win.close(); }
+    function openCamera(cb){ let inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.capture='environment'; inp.onchange=e=>{ if(e.target.files[0]){ let fr=new FileReader(); fr.onload=ev=>cb(ev.target.result); fr.readAsDataURL(e.target.files[0]); } }; inp.click(); }
+    function openGalleryUpload(cb){ let inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=e=>{ if(e.target.files[0]){ let fr=new FileReader(); fr.onload=ev=>cb(ev.target.result); fr.readAsDataURL(e.target.files[0]); } }; inp.click(); }
+    function getRandomEmoji(){ return ['😀','😎','🧒','👧','👦','👩','🧑','🐱','🦊','🐻','🌟','⭐'][Math.floor(Math.random()*12)]; }
+    function showProfileManager(){ let user = users.find(u=>u.id===currentUser.id); let html = `<div class="card"><h3>📸 پروفایل تصویری من</h3><div style="text-align:center;">${user.image ? `<img src="${user.image}" class="profile-img">` : `<div style="font-size:4rem;">${user.emoji || '🧒'}</div>`}</div><div class="flex"><button id="takePhotoBtn" class="btn">📷 دوربین</button><button id="uploadPhotoBtn" class="btn">🖼️ گالری</button><button id="setEmojiBtn" class="btn-warning">😀 ایموجی</button><button id="removePhotoBtn" class="btn-danger">🗑 حذف</button></div><hr><h4>اطلاعات من</h4><p><strong>نام:</strong> ${user.fullName}</p><p><strong>نقش:</strong> ${user.role}</p><p><strong>گروه:</strong> ${user.group||'ندارد'}</p><p><strong>امتیاز:</strong> ${user.score===Infinity?'∞':user.score}</p><hr><h4>🏆 دستاوردهای من</h4><div id="myAchievements"></div><hr><h4>📝 یادداشت شخصی</h4><textarea id="personalNote" rows="3">${user.personalNote || ''}</textarea><button id="saveNoteBtn" class="btn-success">💾 ذخیره یادداشت</button><div class="flex"><button id="viewMyActivityBtn" class="btn-purple">📜 فعالیت‌های من</button><button id="printMyReportBtn" class="btn-warning">🖨️ کارنامه من</button></div><hr><h4>🔗 کد معرف</h4><p>کد شما: <strong>${user.referralCode}</strong></p><p>تعداد معرفی‌ها: ${userReferrals[user.id] ? Object.keys(userReferrals[user.id]).length : 0}</p></div>`; document.getElementById('content-area').innerHTML = html; let achDiv = document.getElementById('myAchievements'); let earned = user.achievements || []; achDiv.innerHTML = achievementsList.map(ach => `<span class="achievement-badge" style="background:${earned.includes(ach.id)?'#f1c40f':'#95a5a6'};">${ach.title} ${earned.includes(ach.id)?'✅':'❌'}</span>`).join(''); document.getElementById('takePhotoBtn')?.addEventListener('click',()=> openCamera((img)=>{ user.image=img; user.emoji=null; saveToLocal(); showProfileManager(); })); document.getElementById('uploadPhotoBtn')?.addEventListener('click',()=> openGalleryUpload((img)=>{ user.image=img; user.emoji=null; saveToLocal(); showProfileManager(); })); document.getElementById('setEmojiBtn')?.addEventListener('click',()=>{ let em=prompt("ایموجی:",getRandomEmoji()); if(em){ user.emoji=em; user.image=null; saveToLocal(); showProfileManager(); } }); document.getElementById('removePhotoBtn')?.addEventListener('click',()=>{ user.image=null; user.emoji='🧒'; saveToLocal(); showProfileManager(); }); document.getElementById('saveNoteBtn')?.addEventListener('click',()=>{ user.personalNote = document.getElementById('personalNote').value; saveToLocal(); alert("یادداشت ذخیره شد"); }); document.getElementById('viewMyActivityBtn')?.addEventListener('click',()=> showUserActivity(currentUser.id)); document.getElementById('printMyReportBtn')?.addEventListener('click',()=> printUserReport(currentUser.id)); }
+    function printSmartCard(userId){ let user=users.find(u=>u.id===userId); if(!user) return; let roleMap={admin:'مدیر',deputy:'جانشین',prime_minister:'وزیر اعظم',interior_minister:'وزیر کشور',support_minister:'وزیر پشتیبانی',supreme_advisor:'مشاور اعظم',teen:'نوجوان',parent:'والد',governor:'فرماندار'}; let parent=users.find(p=>p.childrenIds?.includes(user.id)); let win=window.open('','_blank'); win.document.write(`<html dir="rtl"><head><title>کارت هوشمند ${user.fullName}</title><style>body{font-family:sans-serif;padding:20px;} .card{max-width:400px;margin:auto;border:2px solid #2c7da0;border-radius:28px;padding:20px;text-align:center;}</style></head><body><div class="card"><div class="header">🏛️ کانون فرهنگی هنری امیرالمومنین (ع)</div><div>${user.image?`<img src="${user.image}" style="width:80px;border-radius:50%;">`:`<div style="font-size:4rem;">${user.emoji||'🧑'}</div>`}</div><h3>${user.fullName}</h3><p>نقش: ${roleMap[user.role]}<br>نام کاربری: ${user.username}<br>امتیاز: ${user.score===Infinity?'∞':user.score}<br>والد: ${parent?parent.fullName:'—'}<br>گروه: ${user.group||'—'}</p><div>📅 ${new Date().toLocaleDateString('fa-IR')}</div></div></body></html>`); win.print(); win.close(); }
+    function showManageUsers(){ alert("مدیریت کاربران - کد کامل در فایل نهایی"); }
+    function changeScore(uid,delta){ let u=users.find(u=>u.id===uid); if(u){ if(u.score === Infinity && delta<0) return; u.score = (u.score===Infinity?0:u.score)+delta; if(u.score===0 && delta>0 && u.id===13) u.score=Infinity; saveToLocal(); if(currentUser.id===uid) currentUser.score=u.score; checkAndGrantAchievements(uid); updateWelcome(); if(document.getElementById('usersList')) showManageUsers(); else renderMainMenu(); } }
+    function deleteUser(uid){ if(uid===13) return; users=users.filter(u=>u.id!==uid); saveToLocal(); if(document.getElementById('usersList')) showManageUsers(); else renderMainMenu(); }
+    function editUser(uid){ let u=users.find(u=>u.id===uid); if(!u) return; let newName=prompt("نام کاربری جدید:",u.username); if(newName) u.username=newName.trim(); let newPass=prompt("رمز جدید:",u.password); if(newPass) u.password=newPass.trim(); if(u.role==='parent'){ let ids=prompt("شناسه فرزندان (با کاما):",u.childrenIds?.join(',')||''); if(ids!==null) u.childrenIds=ids.split(',').map(n=>parseInt(n.trim())).filter(n=>!isNaN(n)); } saveToLocal(); if(document.getElementById('usersList')) showManageUsers(); else renderMainMenu(); }// =============== خروجی CSV برای کلاس‌ها و تراکنش‌ها ===============
+function exportClassesCSV(){ let csvRows = [["نام کلاس", "مدرس", "زمان", "تعداد دانش‌آموزان"]]; classes.forEach(c => { csvRows.push([c.name, c.teacher, c.schedule, c.students.length]); }); let csvContent = csvRows.map(row => row.join(",")).join("\n"); let blob = new Blob(["\uFEFF" + csvContent], {type: "text/csv;charset=utf-8;"}); let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `classes_${Date.now()}.csv`; link.click(); alert("خروجی CSV کلاس‌ها دانلود شد"); }
+function exportTransactionsCSV(){ let csvRows = [["تاریخ", "نوع", "عنوان", "مبلغ", "کاربر", "توضیح"]]; transactions.forEach(t => { csvRows.push([t.date, t.type==='income'?'درآمد':'هزینه', t.title, t.amount, t.userId? (users.find(u=>u.id===t.userId)?.fullName || '—') : '—', t.desc||'']); }); let csvContent = csvRows.map(row => row.join(",")).join("\n"); let blob = new Blob(["\uFEFF" + csvContent], {type: "text/csv;charset=utf-8;"}); let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `transactions_${Date.now()}.csv`; link.click(); alert("خروجی CSV تراکنش‌ها دانلود شد"); }
+
+// =============== بازی جدول کلمات متقاطع ===============
+let crosswordData = {
+    words: [
+        { word: "قرآن", clue: "کتاب آسمانی مسلمانان", row:1, col:1, direction:"horizontal" },
+        { word: "مسجد", clue: "محل عبادت مسلمانان", row:3, col:2, direction:"horizontal" },
+        { word: "نماز", clue: "واجب روزانه", row:5, col:3, direction:"horizontal" },
+        { word: "امام", clue: "رهبر نماز جماعت", row:2, col:4, direction:"vertical" },
+        { word: "حج", clue: "یکی از فروع دین", row:4, col:1, direction:"vertical" }
+    ]
+};
+let crosswordGrid = [], crosswordUserAnswers = [];
+function initCrossword(){
+    let size = 8;
+    crosswordGrid = Array(size).fill().map(() => Array(size).fill({ letter: '', fixed: false }));
+    for(let w of crosswordData.words){
+        let r = w.row-1, c = w.col-1;
+        for(let i=0; i<w.word.length; i++){
+            if(r<size && c<size){
+                let letter = w.word[i];
+                crosswordGrid[r][c] = { letter: letter, fixed: true };
+                if(w.direction === 'horizontal') c++;
+                else r++;
+            }
+        }
+    }
+    crosswordUserAnswers = Array(size).fill().map(() => Array(size).fill(''));
+    renderCrossword();
+}
+function renderCrossword(){
+    let size = crosswordGrid.length;
+    let html = `<div class="card"><h3>🔍 جدول کلمات متقاطع (بدون امتیاز اصلی)</h3><div style="display:grid; grid-template-columns:repeat(${size}, 50px); gap:2px; justify-content:center;">`;
+    for(let i=0; i<size; i++){
+        for(let j=0; j<size; j++){
+            let cell = crosswordGrid[i][j];
+            let isFixed = cell && cell.fixed;
+            let value = crosswordUserAnswers[i][j];
+            if(isFixed){
+                html += `<div style="width:50px;height:50px;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;">${cell.letter}</div>`;
+            } else {
+                html += `<div style="width:50px;height:50px;"><input type="text" maxlength="1" data-row="${i}" data-col="${j}" value="${value}" style="width:100%;height:100%;text-align:center;font-size:1rem;"></div>`;
+            }
+        }
+        html += `<br>`;
+    }
+    html += `</div><div class="flex"><button id="checkCrosswordBtn" class="btn-success">بررسی جدول</button><button id="resetCrosswordBtn" class="btn-warning">پاک کردن</button><button id="backCrosswordBtn" class="btn">بازگشت</button></div><div id="crosswordResult"></div></div>`;
+    document.getElementById('content-area').innerHTML = html;
+    document.querySelectorAll('#content-area input').forEach(inp => {
+        inp.oninput = (e) => {
+            let row = parseInt(inp.dataset.row), col = parseInt(inp.dataset.col);
+            crosswordUserAnswers[row][col] = inp.value.toUpperCase();
+        };
+    });
+    document.getElementById('checkCrosswordBtn').onclick = () => {
+        let correct = 0, total = 0;
+        for(let w of crosswordData.words){
+            let r = w.row-1, c = w.col-1;
+            for(let i=0; i<w.word.length; i++){
+                total++;
+                let ans = crosswordUserAnswers[r][c] || '';
+                if(ans.toUpperCase() === w.word[i]) correct++;
+                if(w.direction === 'horizontal') c++;
+                else r++;
+            }
+        }
+        document.getElementById('crosswordResult').innerHTML = `<p>✅ نتیجه: ${correct} از ${total} حرف درست. تلاش مجدد!</p>`;
+        if(correct === total) alert("🎉 تبریک! جدول را کامل حل کردید!");
+    };
+    document.getElementById('resetCrosswordBtn').onclick = () => {
+        crosswordUserAnswers = Array(size).fill().map(() => Array(size).fill(''));
+        renderCrossword();
+    };
+    document.getElementById('backCrosswordBtn').onclick = () => showGamesHub();
+}
+
+// =============== بازی تطابق حافظه (Memory Match) جدید ===============
+let memoryMatchCards = [];
+let memoryMatchFlipped = [];
+let memoryMatchMatched = [];
+let memoryMatchLock = false;
+let memoryMatchFirst = null, memoryMatchSecond = null;
+let memoryMatchScore = 0;
+const memoryMatchTopics = [
+    { id: 1, name: "🕌 کعبه", pairId: 1 },
+    { id: 2, name: "🕌 کعبه", pairId: 1 },
+    { id: 3, name: "📖 قرآن", pairId: 2 },
+    { id: 4, name: "📖 قرآن", pairId: 2 },
+    { id: 5, name: "🧪 دانشمند", pairId: 3 },
+    { id: 6, name: "🧪 دانشمند", pairId: 3 },
+    { id: 7, name: "🌙 رمضان", pairId: 4 },
+    { id: 8, name: "🌙 رمضان", pairId: 4 }
+];
+function initMemoryMatch() {
+    memoryMatchCards = [...memoryMatchTopics];
+    for (let i = memoryMatchCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [memoryMatchCards[i], memoryMatchCards[j]] = [memoryMatchCards[j], memoryMatchCards[i]];
+    }
+    memoryMatchFlipped = new Array(memoryMatchCards.length).fill(false);
+    memoryMatchMatched = new Array(memoryMatchCards.length).fill(false);
+    memoryMatchFirst = memoryMatchSecond = null;
+    memoryMatchLock = false;
+    memoryMatchScore = 0;
+    renderMemoryMatch();
+}
+function renderMemoryMatch() {
+    let html = `<div class="card"><h3>🧠 بازی تطابق حافظه (بدون امتیاز اصلی)</h3>
+    <p>امتیاز شما: ${memoryMatchScore}</p>
+    <div class="flex" style="justify-content:center; flex-wrap:wrap;">`;
+    for (let i = 0; i < memoryMatchCards.length; i++) {
+        let isFlipped = memoryMatchFlipped[i] || memoryMatchMatched[i];
+        let content = isFlipped ? memoryMatchCards[i].name : "❓";
+        let bgColor = memoryMatchMatched[i] ? "#c8e6c9" : (memoryMatchFlipped[i] ? "#fff3cd" : "#e2e8f0");
+        html += `<div class="memory-card" data-idx="${i}" style="width:100px;height:100px;background:${bgColor};border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;margin:5px;">${content}</div>`;
+    }
+    html += `</div><div class="flex"><button id="resetMemoryMatchBtn" class="btn-warning">🔄 بازی جدید</button><button id="backMemoryMatchBtn" class="btn">بازگشت</button></div></div>`;
+    document.getElementById('content-area').innerHTML = html;
+    attachMemoryMatchEvents();
+}
+function attachMemoryMatchEvents() {
+    document.querySelectorAll('.memory-card').forEach(card => {
+        card.onclick = () => {
+            if (memoryMatchLock) return;
+            let idx = parseInt(card.dataset.idx);
+            if (memoryMatchMatched[idx] || memoryMatchFlipped[idx]) return;
+            memoryMatchFlipped[idx] = true;
+            if (memoryMatchFirst === null) {
+                memoryMatchFirst = idx;
+            } else if (memoryMatchSecond === null && memoryMatchFirst !== idx) {
+                memoryMatchSecond = idx;
+                memoryMatchLock = true;
+                setTimeout(() => {
+                    let card1 = memoryMatchCards[memoryMatchFirst];
+                    let card2 = memoryMatchCards[memoryMatchSecond];
+                    if (card1.pairId === card2.pairId) {
+                        memoryMatchMatched[memoryMatchFirst] = true;
+                        memoryMatchMatched[memoryMatchSecond] = true;
+                        memoryMatchScore += 10;
+                        addActivityLog(currentUser.id, "بازی تطابق", `یک جفت پیدا کرد! +۱۰ امتیاز (فقط در بازی)`);
+                    } else {
+                        memoryMatchFlipped[memoryMatchFirst] = false;
+                        memoryMatchFlipped[memoryMatchSecond] = false;
+                    }
+                    memoryMatchFirst = null;
+                    memoryMatchSecond = null;
+                    memoryMatchLock = false;
+                    renderMemoryMatch();
+                    if (memoryMatchMatched.every(m => m === true)) {
+                        alert(`🎉 تبریک! بازی تمام شد. امتیاز شما: ${memoryMatchScore}`);
+                    }
+                }, 500);
+            }
+            renderMemoryMatch();
+        };
+    });
+    document.getElementById('resetMemoryMatchBtn').onclick = () => initMemoryMatch();
+    document.getElementById('backMemoryMatchBtn').onclick = () => renderMainMenu();
+}
+
+// =============== یادآور هوشمند ===============
+function smartReminder(){
+    let today = new Date().toISOString().slice(0,10);
+    for(let task of tasks){
+        if(task.deadline && task.deadline < today && !task.completedBy.includes(currentUser.id)){
+            addNotification(currentUser.id, "⏰ وظیفه عقب افتاده", `وظیفه "${task.title}" با مهلت ${task.deadline} انجام نشده است.`, "tasks");
+        }
+    }
+    let userAttendance = Object.entries(attendance).filter(([date,rec]) => rec[currentUser.username] === 'present').map(([d])=>d);
+    if(userAttendance.length < 5 && Object.keys(attendance).length > 10){
+        addNotification(currentUser.id, "📋 هشدار غیبت", "شما در این ماه کمتر از ۵ روز حضور داشته‌اید. لطفاً تلاش کنید.", "");
+    }
+    let jalali = getCurrentJalali();
+    let occasions = { "1404/01/01": "🎉 نوروز مبارک!", "1404/02/14": "📅 ولادت امام علی(ع)", "1404/11/22": "🇮🇷 پیروزی انقلاب" };
+    if(occasions[jalali]) addNotification(currentUser.id, "مناسبت امروز", occasions[jalali], "");
+}
+
+// =============== بقیه توابع مدیریتی (سایر بخش‌ها) ===============
+function showPrograms(){ let progText = programs.map(p=>`📌 ${p.name} (${p.date} ${p.time})\n${p.desc}`).join('\n\n'); alert(progText || 'هیچ برنامه‌ای وجود ندارد'); }
+function showManagePrograms(){ if(currentUser.role !== 'admin') return; let html = `<h3>📅 برنامه‌ها</h3>`; programs.forEach((p,i)=>{ html+=`<div class="card"><b>${p.name}</b> (${p.date})<button class="btn-danger" data-pidx="${i}">حذف</button></div>`; }); html+=`<hr><input id="pn" placeholder="نام"><input id="pd" placeholder="تاریخ"><button id="addProgBtn">افزودن</button>`; document.getElementById('content-area').innerHTML = html; document.querySelectorAll('[data-pidx]').forEach(btn=>btn.onclick=()=>{ programs.splice(parseInt(btn.dataset.pidx),1); saveToLocal(); showManagePrograms(); }); document.getElementById('addProgBtn').onclick = ()=>{ let name=document.getElementById('pn').value.trim(); if(name) programs.push({name, date:document.getElementById('pd').value, time:"", desc:"", repeat:""}); saveToLocal(); showManagePrograms(); }; }
+function showSolvePuzzles(){ if(!puzzles.length) return alert('معمایی نیست'); let html = `<h3>🔓 حل معماها</h3>`; puzzles.forEach((p,idx)=>{ let already = solvedPuzzles.some(sp=>sp.userId===currentUser.id && sp.puzzleId===idx); html += `<div class="card"><b>${idx+1}. ${p.question}</b> (${p.points})<br>${!already?`<input id="a${idx}" placeholder="پاسخ"><button class="btn-success" data-idx="${idx}">بررسی</button>`:'✅ حل شده'}</div>`; }); document.getElementById('content-area').innerHTML = html; document.querySelectorAll('[data-idx]').forEach(btn=>{ btn.onclick = ()=>{ let idx=parseInt(btn.dataset.idx); let ans=document.getElementById(`a${idx}`).value.trim().toLowerCase(); if(ans===puzzles[idx].answer){ if(solvedPuzzles.some(sp=>sp.userId===currentUser.id && sp.puzzleId===idx)) return; currentUser.score += puzzles[idx].points; let u=users.find(u=>u.id===currentUser.id); if(u) u.score=currentUser.score; solvedPuzzles.push({ userId:currentUser.id, puzzleId:idx }); saveToLocal(); addActivityLog(currentUser.id, "حل معما", `معمای ${puzzles[idx].question} با موفقیت حل شد. +${puzzles[idx].points} امتیاز`); checkAndGrantAchievements(currentUser.id); alert(`✅ صحیح! +${puzzles[idx].points} امتیاز`); showSolvePuzzles(); updateWelcome(); } else alert('پاسخ نادرست'); }; }); }
+function showManagePuzzles(){ if(currentUser.role !== 'admin') return; let html = `<h3>🧩 مدیریت معماها</h3>`; puzzles.forEach((p,i)=>{ html+=`<div class="user-row"><div>${i+1}. ${p.question} (${p.points})</div><button class="btn-danger" data-pid="${i}">حذف</button></div>`; }); html+=`<hr><input id="pq" placeholder="سوال"><input id="pa" placeholder="پاسخ"><input id="pp" placeholder="امتیاز" value="10"><button id="addPuzBtn">افزودن</button>`; document.getElementById('content-area').innerHTML = html; document.querySelectorAll('[data-pid]').forEach(b=>b.onclick=()=>{ puzzles.splice(parseInt(b.dataset.pid),1); saveToLocal(); showManagePuzzles(); }); document.getElementById('addPuzBtn').onclick = ()=>{ let q=document.getElementById('pq').value.trim(), a=document.getElementById('pa').value.trim().toLowerCase(), pts=parseInt(document.getElementById('pp').value)||10; if(q&&a) puzzles.push({question:q, answer:a, points:pts}); saveToLocal(); showManagePuzzles(); }; }
+function showChat(){ let area=document.getElementById('content-area'); area.innerHTML=`<div class="card"><div class="flex"><button id="importChatBtn" class="btn-purple">📂 بارگذاری JSON چت‌بات</button></div><div id="chatlog" style="height:300px; overflow-y:auto; border:1px solid #ccc; padding:10px; border-radius:20px; margin-bottom:10px;"></div><div class="flex"><input id="chatinput" placeholder="سوال..."><button id="chatsend" class="btn-success">ارسال</button></div></div>`; let log=document.getElementById('chatlog'); let add=(txt,isUser)=>{ let d=document.createElement('div'); d.style.textAlign=isUser?'left':'right'; d.style.margin='8px'; d.style.background=isUser?'#e2f0ff':'#f0f0f0'; d.style.padding='8px'; d.style.borderRadius='16px'; d.innerHTML=isUser?`<b>شما:</b> ${txt}`:`<b>یار مهربان:</b> ${txt}`; log.appendChild(d); log.scrollTop=log.scrollHeight; }; let input=document.getElementById('chatinput'); let send=()=>{ let msg=input.value.trim(); if(!msg) return; add(msg,true); add(chatReply(msg),false); input.value=''; }; document.getElementById('chatsend').onclick=send; document.getElementById('importChatBtn').onclick=()=>importChatbotJSON(); input.onkeypress=e=>{ if(e.key==='Enter') send(); }; add('سلام! من یار مهربان هستم.',false); }
+function manageQuizzes(){ alert("مدیریت آزمون"); }
+function addQuestionToQuiz(qid){ alert("افزودن سوال"); }
+function takeQuiz(){ alert("شرکت در آزمون - فقط مدیر"); }
+function viewQuizResults(){ alert("نتایج آزمون"); }
+function showAttendance(){ alert("حضور و غیاب - وزیر کشور"); }
+function showMinisterApproval(){ alert("تایید وزرا"); }
+function showAdvisorEvaluation(){ alert("ارزیابی مشاور"); }
+function exportPersonalBackup(){ alert("بکاپ شخصی"); }
+function importPersonalBackup(){ alert("بازیابی شخصی"); }
+function exportFullBackup(){ alert("بکاپ کامل"); }
+function importFullJSON(){ alert("واردات JSON"); }
+function exportCSV(){ alert("خروجی CSV کاربران"); }
+function showStorageStatus(){ let data=localStorage.getItem("yare_data"); alert(data? "داده وجود دارد" : "خالی"); }
+function backupToEmail(){ alert("پشتیبان ایمیل"); }
+function showSendMessage(){ alert("ارسال پیام"); }
+function showMessages(){ alert("دریافت پیام"); }
+function showParentPanel(){ alert("پنل والدین"); }
+function manageParentFeedbacks(){ alert("پاسخ به بازخورد"); }
+function showPollManagement(){ alert("نظرسنجی‌ها"); }
+function voteInPoll(){ alert("شرکت در نظرسنجی"); }
+function showTaskManagement(){ alert("مدیریت وظایف"); }
+function showTasksForUser(){ alert("وظایف من"); }
+function showGroupStats(){ alert("آمار گروهی"); }
+function showGallery(){ let html = `<div class="card"><h3>🖼️ گالری</h3><div class="flex" id="galleryImages"></div><button class="btn" onclick="renderMainMenu()">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; let galleryDiv = document.getElementById('galleryImages'); gallery.forEach(img => { galleryDiv.innerHTML += `<img src="${img.url}" class="gallery-image" title="${img.title}">`; }); }
+function showClassManagement(){ alert("مدیریت کلاس‌ها"); }
+function showMyClasses(){ let myClasses = classes.filter(c=>c.students.includes(currentUser.id) || currentUser.role==='admin'); let html = `<div class="card"><h3>📚 کلاس‌های من</h3>`; myClasses.forEach(c=>{ html+=`<div><b>${c.name}</b> - ${c.teacher}<br>زمان: ${c.schedule}</div>`; }); html+=`<button class="btn" onclick="renderMainMenu()">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; }
+function renderNajat(){ alert("بازی نجات - کد کامل در فایل نهایی"); }
+function loadAdventureGame(){ alert("ماجراجوی دانش"); }
+function loadScienceEducation(){ alert("آموزش علمی"); }
+function initMemoryGame(){ alert("بازی حافظه قدیمی"); }
+function initHangman(){ alert("حدس کلمه"); }
+function startTournament(){ alert("مسابقه گروهی"); }
+function showGamesHub(){ let html = `<div class="card"><h3>🎮 بازی‌ها</h3><div class="game-card" id="game-crossword">📖 جدول کلمات متقاطع</div><div class="game-card" id="game-memorymatch">🧠 تطابق حافظه</div><div class="game-card" id="game-najat">🏚️ نجات</div><div class="game-card" id="game-adventure">🧠 ماجراجوی دانش</div><div class="game-card" id="game-science">🔬 آموزش علمی</div><div class="game-card" id="game-memory">🧠 حافظه</div><div class="game-card" id="game-hangman">🪢 حدس کلمه</div><button class="btn" onclick="renderMainMenu()">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; document.getElementById('game-crossword').onclick = ()=>initCrossword(); document.getElementById('game-memorymatch').onclick = ()=>initMemoryMatch(); document.getElementById('game-najat').onclick = ()=>renderNajat(); document.getElementById('game-adventure').onclick = ()=>loadAdventureGame(); document.getElementById('game-science').onclick = ()=>loadScienceEducation(); document.getElementById('game-memory').onclick = ()=>initMemoryGame(); document.getElementById('game-hangman').onclick = ()=>initHangman(); }
+function showMemberManagement() { alert("مدیریت جامع اعضا"); }
+function showFinancialManagement(){ let html = `<div class="card"><h3>💰 مدیریت مالی</h3><button id="addIncomeBtn" class="btn-success">➕ درآمد</button><button id="addExpenseBtn" class="btn-warning">➖ هزینه</button><button id="exportTransactionsCSV" class="btn-purple">📤 خروجی CSV تراکنش‌ها</button><div id="transactionsList"></div></div>`; document.getElementById('content-area').innerHTML = html; function renderTransactions(){ let tDiv = document.getElementById('transactionsList'); tDiv.innerHTML = `<table><thead><tr><th>تاریخ</th><th>نوع</th><th>عنوان</th><th>مبلغ</th></tr></thead><tbody>`; transactions.forEach(t => { tDiv.innerHTML += `<tr><td>${t.date}</td><td>${t.type==='income'?'درآمد':'هزینه'}‌‌<td>${t.title}‌<td>${t.amount} تومان‌`; }); tDiv.innerHTML += `</tbody></table>`; } renderTransactions(); document.getElementById('addIncomeBtn').onclick = () => { let title = prompt("عنوان درآمد:"); if(!title) return; let amount = parseInt(prompt("مبلغ:")); if(isNaN(amount)) return; transactions.push({ id:Date.now(), date:new Date().toLocaleString(), type:'income', title, amount, userId:null, desc:"" }); saveToLocal(); renderTransactions(); }; document.getElementById('addExpenseBtn').onclick = () => { let title = prompt("عنوان هزینه:"); if(!title) return; let amount = parseInt(prompt("مبلغ:")); if(isNaN(amount)) return; transactions.push({ id:Date.now(), date:new Date().toLocaleString(), type:'expense', title, amount, userId:null, desc:"" }); saveToLocal(); renderTransactions(); }; document.getElementById('exportTransactionsCSV').onclick = () => exportTransactionsCSV(); }
+function toJalali(gy,gm,gd){ let g_d_m=[0,31,59,90,120,151,181,212,243,273,304,334]; let gy2=(gm>2)?(gy+1):gy; let days=355666+(365*gy)+Math.floor((gy+3)/4)-Math.floor((gy+99)/100)+Math.floor((gy+399)/400)+gd+g_d_m[gm-1]; let jy=-1595+(33*Math.floor(days/12053)); days%=12053; let jm=Math.floor(days/31); days%=31; if(jm>6){ jm=6; days+=31; } let jd=days+1; if(jm>6) jm+=2; else jm+=1; return {year:jy,month:jm,day:jd}; }
+function getCurrentJalali(){ let d=new Date(); let j=toJalali(d.getFullYear(),d.getMonth()+1,d.getDate()); return `${j.year}/${j.month.toString().padStart(2,'0')}/${j.day.toString().padStart(2,'0')}`; }
+function showReminder(){ let today=getCurrentJalali(); let upcoming=[]; for(let p of programs){ if(p.date > today) upcoming.push(p); } let reminderDiv=document.getElementById("reminder-area"); if(upcoming.length){ reminderDiv.style.display="block"; reminderDiv.innerHTML=`<strong>⏰ یادآور:</strong> برنامه‌های نزدیک: ${upcoming.map(p=>p.name).join(' , ')}`; } else reminderDiv.style.display="none"; }
+function addSubmenu(parent, title, items){ let div=document.createElement('div'); div.className='submenu'; let sum=document.createElement('summary'); sum.innerHTML=`<span style="font-weight:bold;">📁 ${title}</span>`; div.appendChild(sum); items.forEach(([text,func])=>{ let btn=document.createElement('button'); btn.textContent=text; btn.onclick=func; div.appendChild(btn); }); parent.appendChild(div); }
+function showAdvancedReports() { alert("گزارشات پیشرفته"); }
+async function exportBackupAsQR() { alert("خروجی QR - لینک بکاپ"); }
+async function importFromQR() { alert("ورود با اسکن QR"); }
+function startAutoSave(){ if(autoSaveInterval) clearInterval(autoSaveInterval); autoSaveInterval = setInterval(() => { saveToLocal(); console.log("Auto-save"); }, 30000); }    // =============== منوی اصلی ===============
+    function renderMainMenu(){
+        let menuDiv=document.getElementById('menu-buttons'); menuDiv.innerHTML='';
+        addSubmenu(menuDiv,'📸 پروفایل من',[['مدیریت تصویر و یادداشت',showProfileManager]]);
+        addSubmenu(menuDiv,'📅 برنامه‌ها',[['مشاهده',showPrograms]]);
+        addSubmenu(menuDiv,'🧩 معماها',[['حل معما',showSolvePuzzles]]);
+        addSubmenu(menuDiv,'📝 آزمون',[['شرکت',takeQuiz],['نتایج',viewQuizResults]]);
+        addSubmenu(menuDiv,'📬 پیام',[['ارسال',showSendMessage],['دریافت',showMessages]]);
+        addSubmenu(menuDiv,'🤖 چت',[['گفتگو',showChat]]);
+        addSubmenu(menuDiv,'🎮 بازی‌ها',[['نمایش',showGamesHub]]);
+        addSubmenu(menuDiv,'🗳️ نظرسنجی',[['شرکت در نظرسنجی',voteInPoll]]);
+        addSubmenu(menuDiv,'📋 وظایف',[['مشاهده و انجام',showTasksForUser]]);
+        addSubmenu(menuDiv,'🔔 اعلان‌ها',[['مشاهده',showNotifications]]);
+        addSubmenu(menuDiv,'📚 کلاس‌ها',[['مشاهده کلاس‌های من',showMyClasses],['خروجی CSV کلاس‌ها',exportClassesCSV]]);
+        addSubmenu(menuDiv,'🖼️ گالری',[['مشاهده گالری',showGallery]]);
+        addSubmenu(menuDiv,'📊 گزارشات',[['نمودار و PDF',showAdvancedReports]]);
+        addSubmenu(menuDiv,'💰 مدیریت مالی',[['نمایش',showFinancialManagement],['خروجی CSV تراکنش‌ها',exportTransactionsCSV]]);
+        addSubmenu(menuDiv,'🔄 ابزارها',[['مبدل تاریخ',showDateConverter],['بکاپ شخصی',exportPersonalBackup],['بازیابی شخصی',importPersonalBackup],['خروجی QR',exportBackupAsQR],['اسکن QR',importFromQR]]);
+        if(currentUser.role==='admin' || currentUser.role==='deputy'){
+            let mgmtDiv = document.createElement('div'); mgmtDiv.className='submenu';
+            let mgmtSum = document.createElement('summary'); mgmtSum.innerHTML = `<span style="font-weight:bold;">👑 مدیریت</span>`;
+            mgmtDiv.appendChild(mgmtSum);
+            let innerDiv = document.createElement('div'); innerDiv.style.marginRight='20px';
+            const mgmtItems = [
+                ['مدیریت کاربران',showManageUsers], ['برنامه‌ها',showManagePrograms], ['معماها',showManagePuzzles],
+                ['آزمون‌ها',manageQuizzes], ['نظرسنجی‌ها',showPollManagement], ['مدیریت وظایف',showTaskManagement],
+                ['پاسخ به بازخورد والدین',manageParentFeedbacks], ['آمار گروهی',showGroupStats],
+                ['مدیریت کلاس‌ها',showClassManagement], ['مدیریت گالری',showGallery], ['مدیریت جامع اعضا',showMemberManagement],
+                ['بکاپ کامل',exportFullBackup], ['خروجی CSV کاربران',exportCSV], ['پشتیبان ایمیل',backupToEmail],
+                ['واردات JSON',importFullJSON]
+            ];
+            mgmtItems.forEach(([text,func])=>{ let btn=document.createElement('button'); btn.textContent=text; btn.onclick=func; innerDiv.appendChild(btn); });
+            mgmtDiv.appendChild(innerDiv);
+            menuDiv.appendChild(mgmtDiv);
+        } else if(currentUser.role==='interior_minister' || currentUser.role==='governor'){
+            addSubmenu(menuDiv,'📋 حضور و غیاب',[['مدیریت',showAttendance]]);
+        } else if(currentUser.role==='prime_minister'){
+            addSubmenu(menuDiv,'✅ تایید وزرا',[['مدیریت',showMinisterApproval]]);
+        } else if(currentUser.role==='supreme_advisor'){
+            addSubmenu(menuDiv,'📝 ارزیابی',[['مدیریت',showAdvisorEvaluation]]);
+        } else if(currentUser.role==='parent'){
+            addSubmenu(menuDiv,'👪 پنل والدین',[['مشاهده فرزندان',showParentPanel]]);
+        }
+        updateWelcome();
+        showReminder();
+        smartReminder();
+        document.getElementById('content-area').innerHTML='<div class="card">از منوی بالا انتخاب کنید.</div>';
+    }
+
+    // =============== توابع کمکی چت‌بات ===============
+    function levenshteinDistance(a,b){
+        if(a.length===0) return b.length; if(b.length===0) return a.length;
+        let matrix=[];
+        for(let i=0;i<=b.length;i++) matrix[i]=[i];
+        for(let j=0;j<=a.length;j++) matrix[0][j]=j;
+        for(let i=1;i<=b.length;i++){
+            for(let j=1;j<=a.length;j++){
+                if(b.charAt(i-1)===a.charAt(j-1)) matrix[i][j]=matrix[i-1][j-1];
+                else matrix[i][j]=Math.min(matrix[i-1][j-1]+1, matrix[i][j-1]+1, matrix[i-1][j]+1);
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+    function findBestPattern(input){
+        input=input.trim().toLowerCase();
+        let bestMatch=null, bestDist=3;
+        for(let p of chatbotPatterns){
+            let dist=levenshteinDistance(input, p.pattern.toLowerCase());
+            if(dist<bestDist){ bestDist=dist; bestMatch=p; }
+        }
+        return bestMatch;
+    }
+    function chatReply(inp){
+        inp=inp.trim().toLowerCase();
+        if(inp.startsWith('یاد بگیر')){
+            let parts=inp.slice(8).split('=');
+            if(parts.length===2){ chatMemory.learned[parts[0].trim()]=parts[1].trim(); saveToLocal(); return `یاد گرفتم: "${parts[0].trim()}"`; }
+            return 'فرمان: یاد بگیر کلید = مقدار';
+        }
+        let best=findBestPattern(inp);
+        if(best){
+            let response=best.response;
+            if(response.includes('{{score}}')) response=response.replace('{{score}}', currentUser.score===Infinity?'∞':currentUser.score);
+            return response;
+        }
+        for(let k in chatMemory.learned) if(inp.includes(k)) return chatMemory.learned[k];
+        return 'متوجه نشدم. با «یاد بگیر» به من بیاموز.';
+    }
+    function importChatbotJSON(){
+        let inp=document.createElement('input'); inp.type='file'; inp.accept='application/json';
+        inp.onchange=e=>{ let f=e.target.files[0]; if(!f) return; let fr=new FileReader(); fr.onload=ev=>{ try{ let d=JSON.parse(ev.target.result); if(d.patterns) chatbotPatterns=d.patterns; alert("داده‌های چت‌بات با موفقیت بارگذاری شد."); } catch(e){ alert("فایل JSON نامعتبر"); } }; fr.readAsText(f); }; inp.click();
+    }
+
+    // =============== لاگین و راه‌اندازی ===============
+    function showLogin(){ document.getElementById('login-view').style.display='block'; document.getElementById('main-view').style.display='none'; }
+    function showMainApp(){ document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; startAutoSave(); renderMainMenu(); }
+    function init(){ loadFromLocal(); initTheme(); document.getElementById('login-btn').onclick=()=>{ let u=document.getElementById('login-username').value.trim(); let p=document.getElementById('login-password').value.trim(); let user=authenticate(u,p); if(user){ currentUser=user; showMainApp(); } else document.getElementById('login-error').innerText='نام کاربری یا رمز اشتباه است'; }; document.getElementById('logout-btn').onclick=()=>{ currentUser=null; showLogin(); }; document.getElementById('notificationIcon').onclick=()=>showNotifications(); document.getElementById('showStatusBtn').onclick=()=>showStorageStatus(); showLogin(); }
+    init();
+</script>
+</body>
+</html>
