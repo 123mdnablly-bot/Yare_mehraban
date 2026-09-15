@@ -1,23 +1,28 @@
 {
-  "name": "یار مهربان",
-  "short_name": "YareMehraban",
-  "start_url": ".",
+  "name": "یار مهربان | کانون امیرالمؤمنین (ع)",
+  "short_name": "یار مهربان",
+  "description": "سامانه‌ی آموزشی و فرهنگی کانون امیرالمؤمنین (ع)",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "theme_color": "#2c3e50",
-  "background_color": "#ffffff",
   "orientation": "portrait",
-  "dir": "rtl",
+  "background_color": "#2c3e50",
+  "theme_color": "#2c3e50",
   "lang": "fa",
+  "dir": "rtl",
+  "categories": ["education", "productivity"],
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/123mdnably-bot/yare-mehraban/main/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://raw.githubusercontent.com/123mdnably-bot/yare-mehraban/main/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
