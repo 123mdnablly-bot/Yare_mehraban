@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="fa">
 <head>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2c3e50">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="یار مهربان">
+<link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>یار مهربان | نسخه ۰.۸ کامل</title>
@@ -15,8 +21,80 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         *{box-sizing:border-box;font-family:system-ui,'Segoe UI',Tahoma,'Vazir',sans-serif;}
+        <script>
+// ============================================================
+// ثبت Service Worker
+// ============================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('SW.js')
+      .then((reg) => console.log('✅ Service Worker ثبت شد:', reg.scope))
+      .catch((err) => console.error('❌ خطا در ثبت SW:', err));
+  });
+}
+
+// ============================================================
+// دکمه‌ی نصب PWA
+// ============================================================
+let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (installBtn) installBtn.style.display = 'block';
+});
+
+if (installBtn) {
+  installBtn.onclick = async () => {
+    if (!deferredPrompt) {
+      alert('برای نصب: از منوی مرورگر گزینه «افزودن به صفحه‌ی اصلی» را بزنید.');
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      console.log('✅ کاربر اپ را نصب کرد');
+      installBtn.style.display = 'none';
+    }
+    deferredPrompt = null;
+  };
+}
+
+// اگر روی iOS هستیم
+const isIos = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = () => ('standalone' in navigator && navigator.standalone) || window.matchMedia('(display-mode: standalone)').matches;
+if (isIos() && !isStandalone() && installBtn) {
+  installBtn.style.display = 'block';
+  installBtn.onclick = () => {
+    alert('برای نصب روی iPhone:\n۱. روی دکمه‌ی اشتراک‌گذاری (مربع با فلش) بزنید.\n۲. گزینه‌ی «Add to Home Screen» را انتخاب کنید.');
+  };
+}
+
+// اگر قبلاً نصب شده، دکمه را پنهان کن
+if (isStandalone() && installBtn) installBtn.style.display = 'none';
+
+// ============================================================
+// اعلان‌های Push (درخواست اجازه)
+// ============================================================
+async function askNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    const perm = await Notification.requestPermission();
+    console.log('اجازه اعلان:', perm);
+  }
+}
+// اجازه را بعد از ورود کاربر بگیرید
+window.addEventListener('load', () => {
+  setTimeout(askNotificationPermission, 5000);
+});
+</script>
         body{background:#e9f0f5;margin:0;padding:20px;transition:background 0.3s, color 0.3s;}
         body.dark{background:#1e2a3a;color:#e2e8f0;}
+        <!-- دکمه نصب اپ -->
+<button id="installBtn" style="display:none; position:fixed; bottom:20px; right:20px; z-index:9999; background:#27ae60; color:#fff; padding:12px 20px; border-radius:50px; box-shadow:0 4px 12px rgba(0,0,0,.3); font-weight:bold; border:none; cursor:pointer;">
+  📲 نصب اپ روی گوشی
+</button>
         body.green{background:#d1f7d1;color:#1a3b1a;}
         body.gold{background:#fff8e7;color:#5c3d00;}
         body.blue{background:#d4e6ff;color:#002e5c;}
