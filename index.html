@@ -156,6 +156,7 @@ window.addEventListener('load', () => {
         @media print { body * { visibility: hidden; } .print-report, .print-report * { visibility: visible; } .print-report { position: absolute; top: 0; right: 0; width: 100%; background: white; padding: 20px; } }
         @media (max-width:700px){.title{font-size:1rem;}}
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="app-container" id="app">
@@ -178,6 +179,11 @@ window.addEventListener('load', () => {
 </div>
 <script>
 // ---------------------------- داده‌های اولیه ----------------------------
+// اتصال به Supabase
+const SUPABASE_URL = 'https://rhxwoxuxggpsmqqtzymg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_sUqNRanoC_jwdGq2LpMzwA_Ea4ddc3i';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+console.log('✅ Supabase وصل شد');
 let users = [
     { id:13, username:"Mohammad1384", password:"Mohammad1384", role:"admin", fullName:"مدیر ارشد", score:Infinity, group:"A", image:null, emoji:"👨‍💼", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF13", referredBy:null, classes:[], governorGroup:null },
     { id:14, username:"Mjd", password:"mjd123", role:"prime_minister", fullName:"محمد جواد عظیمائی", score:760, group:"A", image:null, emoji:"🧑‍⚖️", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF14", referredBy:null, classes:[], governorGroup:null },
