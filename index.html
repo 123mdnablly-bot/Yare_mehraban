@@ -180,10 +180,15 @@ window.addEventListener('load', () => {
 <script>
 // ---------------------------- داده‌های اولیه ----------------------------
 // اتصال به Supabase
-const SUPABASE_URL = 'https://rhxwoxuxggpsmqqtzymg.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_sUqNRanoC_jwdGq2LpMzwA_Ea4ddc3i';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-console.log('✅ Supabase وصل شد');
+try {
+    window.dbClient = window.supabase.createClient(
+        'https://rhxwoxuxggpsmqqtzymg.supabase.co',
+        'sb_publishable_sUqNRanoC_jwdGq2LpMzwA_Ea4ddc3i'
+    );
+    console.log('✅ Supabase وصل شد');
+} catch(e) {
+    console.error('❌ خطا:', e);
+}
 let users = [
     { id:13, username:"Mohammad1384", password:"Mohammad1384", role:"admin", fullName:"مدیر ارشد", score:Infinity, group:"A", image:null, emoji:"👨‍💼", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF13", referredBy:null, classes:[], governorGroup:null },
     { id:14, username:"Mjd", password:"mjd123", role:"prime_minister", fullName:"محمد جواد عظیمائی", score:760, group:"A", image:null, emoji:"🧑‍⚖️", childrenIds:null, personalNote:"", achievements:[], referralCode:"REF14", referredBy:null, classes:[], governorGroup:null },
