@@ -618,7 +618,8 @@ async function exportBackupAsQR() { const fullData = { users, programs, puzzles,
     if(autoSaveInterval) clearInterval(autoSaveInterval); 
     autoSaveInterval = setInterval(() => { 
         saveToLocal(); 
-    }, 30000);                                
+    }, 30000);
+ }       
 // ---------------------------- منوی اصلی و راه‌اندازی ----------------------------
 function renderMainMenu(){
     let menuDiv=document.getElementById('menu-buttons'); menuDiv.innerHTML='';
