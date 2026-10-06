@@ -658,6 +658,9 @@ function exportTransactionsCSV(){ let csvRows = [["تاریخ", "نوع", "عن�
 function showLogin(){ document.getElementById('login-view').style.display='block'; document.getElementById('main-view').style.display='none'; }
 function showMainApp(){ document.getElementById('login-view').style.display='none'; document.getElementById('main-view').style.display='block'; startAutoSave(); renderMainMenu(); }
 function init(){ loadFromLocal(); initTheme(); document.getElementById('login-btn').onclick=()=>{ let u=document.getElementById('login-username').value.trim(); let p=document.getElementById('login-password').value.trim(); let user=authenticate(u,p); if(user){ currentUser=user; showMainApp(); } else document.getElementById('login-error').innerText='نام کاربری یا رمز اشتباه است'; }; document.getElementById('logout-btn').onclick=()=>{ currentUser=null; showLogin(); }; document.getElementById('notificationIcon').onclick=()=>showNotifications(); document.getElementById('showStatusBtn').onclick=()=>showStorageStatus(); showLogin(); }
+function importFromQR() {
+    alert('📲 قابلیت اسکن QR به زودی اضافه می‌شود.');
+    }
 init();
 </script>
 </body>
