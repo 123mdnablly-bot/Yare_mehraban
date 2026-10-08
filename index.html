@@ -670,7 +670,7 @@ function renderMainMenu(){
         let mgmtSum = document.createElement('summary'); mgmtSum.innerHTML = `<span style="font-weight:bold;">👑 مدیریت</span>`;
         mgmtDiv.appendChild(mgmtSum);
         let innerDiv = document.createElement('div'); innerDiv.style.marginRight='20px';
-        const mgmtItems = [['مدیریت کاربران',showManageUsers],['برنامه‌ها',showManagePrograms],['معماها',showManagePuzzles],['آزمون‌ها',manageQuizzes],['نظرسنجی‌ها',showPollManagement],['مدیریت وظایف',showTaskManagement],['پاسخ به بازخورد والدین',manageParentFeedbacks],['آمار گروهی',showGroupStats],['مدیریت کلاس‌ها',showClassManagement],['مدیریت گالری',showGallery],['مدیریت جامع اعضا',showMemberManagement],['بکاپ کامل',exportFullBackup],['خروجی CSV کاربران',exportCSV],['پشتیبان ایمیل',backupToEmail],['واردات JSON',importFullJSON],['🔬 تست ذخیره در سرور', testSaveToServer]];
+        const mgmtItems = [['مدیریت کاربران',showManageUsers],['برنامه‌ها',showManagePrograms],['معماها',showManagePuzzles],['آزمون‌ها',manageQuizzes],['نظرسنجی‌ها',showPollManagement],['مدیریت وظایف',showTaskManagement],['پاسخ به بازخورد والدین',manageParentFeedbacks],['آمار گروهی',showGroupStats],['مدیریت کلاس‌ها',showClassManagement],['مدیریت گالری',showGallery],['مدیریت جامع اعضا',showMemberManagement],['بکاپ کامل',exportFullBackup],['خروجی CSV کاربران',exportCSV],['پشتیبان ایمیل',backupToEmail],['واردات JSON',importFullJSON],['☁️ ذخیره همه کاربران',saveAllUsersToServer]];
         mgmtItems.forEach(([text,func])=>{ let btn=document.createElement('button'); btn.textContent=text; btn.onclick=func; innerDiv.appendChild(btn); });
         mgmtDiv.appendChild(innerDiv);
         menuDiv.appendChild(mgmtDiv);
@@ -789,6 +789,48 @@ async function testSaveToServer() {
         showTopBar('❌ خطای غیرمنتظره: ' + e.message, '#c0392b');
     }
 }
+    async function saveAllUsersToServer() {
+    if (!window.dbClient) { showTopBar('❌ dbClient وجود ندارد', '#c0392b'); return; }
+    if (currentUser.role !== 'admin' && currentUser.role !== 'deputy') { showTopBar('❌ فقط مدیر دسترسی دارد', '#c0392b'); return; }
+    
+    showTopBar('📤 در حال ارسال ' + users.length + ' کاربر به سرور...', '#3498db');
+    
+    let okCount = 0;
+    let errCount = 0;
+    let errors = [];
+    
+    for (let user of users) {
+        try {
+            const result = await window.dbClient.from('profiles').upsert({
+                id: String(user.id),
+                username: user.username,
+                password: user.password,
+                role: user.role,
+                full_name: user.fullName,
+                score: (user.score === Infinity || user.score === null) ? 999999 : Number(user.score) || 0,
+                "group": user.group || null,
+                emoji: user.emoji || 'user',
+                referral_code: user.referralCode || null
+            });
+            if (result.error) {
+                errCount++;
+                errors.push(user.username + ': ' + result.error.message);
+            } else {
+                okCount++;
+            }
+        } catch(e) {
+            errCount++;
+            errors.push(user.username + ': ' + e.message);
+        }
+    }
+    
+    if (errCount === 0) {
+        showTopBar('✅ موفق! ' + okCount + ' کاربر ذخیره شد', '#14503a');
+    } else {
+        showTopBar('⚠️ ' + okCount + ' موفق، ' + errCount + ' خطا. اولی: ' + errors[0], '#e67e22');
+        console.error('Errors:', errors);
+    }
+    }
     init();
 
 // بعد از لود شدن صفحه، اتصال رو تست کن
