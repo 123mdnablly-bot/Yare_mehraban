@@ -670,7 +670,7 @@ function renderMainMenu(){
         let mgmtSum = document.createElement('summary'); mgmtSum.innerHTML = `<span style="font-weight:bold;">👑 مدیریت</span>`;
         mgmtDiv.appendChild(mgmtSum);
         let innerDiv = document.createElement('div'); innerDiv.style.marginRight='20px';
-        const mgmtItems = [['مدیریت کاربران',showManageUsers],['برنامه‌ها',showManagePrograms],['معماها',showManagePuzzles],['آزمون‌ها',manageQuizzes],['نظرسنجی‌ها',showPollManagement],['مدیریت وظایف',showTaskManagement],['پاسخ به بازخورد والدین',manageParentFeedbacks],['آمار گروهی',showGroupStats],['مدیریت کلاس‌ها',showClassManagement],['مدیریت گالری',showGallery],['مدیریت جامع اعضا',showMemberManagement],['بکاپ کامل',exportFullBackup],['خروجی CSV کاربران',exportCSV],['پشتیبان ایمیل',backupToEmail],['واردات JSON',importFullJSON]];
+        const mgmtItems = [['مدیریت کاربران',showManageUsers],['برنامه‌ها',showManagePrograms],['معماها',showManagePuzzles],['آزمون‌ها',manageQuizzes],['نظرسنجی‌ها',showPollManagement],['مدیریت وظایف',showTaskManagement],['پاسخ به بازخورد والدین',manageParentFeedbacks],['آمار گروهی',showGroupStats],['مدیریت کلاس‌ها',showClassManagement],['مدیریت گالری',showGallery],['مدیریت جامع اعضا',showMemberManagement],['بکاپ کامل',exportFullBackup],['خروجی CSV کاربران',exportCSV],['پشتیبان ایمیل',backupToEmail],['واردات JSON',importFullJSON],['🔬 تست ذخیره در سرور', testSaveToServer]];
         mgmtItems.forEach(([text,func])=>{ let btn=document.createElement('button'); btn.textContent=text; btn.onclick=func; innerDiv.appendChild(btn); });
         mgmtDiv.appendChild(innerDiv);
         menuDiv.appendChild(mgmtDiv);
