@@ -717,23 +717,33 @@ function init(){
     loadFromLocal(); 
     initTheme(); 
     
-    document.getElementById('login-btn').onclick=()=>{ 
-        let u=document.getElementById('login-username').value.trim(); 
-        let p=document.getElementById('login-password').value.trim(); 
-        let user=authenticate(u,p); 
-        if(user){ 
-            currentUser=user; 
-            showMainApp(); 
-            // ✅ ذخیره کاربر در Supabase
-            cloudSaveUser(user).then(()=>{
-                console.log('✅ کاربر به سرور ارسال شد');
-            }).catch(err=>{
-                console.log('⚠️ خطا در ارسال به سرور:', err);
-            });
-        } else {
-            document.getElementById('login-error').innerText='نام کاربری یا رمز اشتباه است'; 
-        }
-    }; 
+    document.getElementById('login-btn').onclick=async ()=>{
+    let u=document.getElementById('login-username').value.trim();
+    let p=document.getElementById('login-password').value.trim();
+    
+    // ✅ اول از سرور بارگذاری کن
+    let errorEl = document.getElementById('login-error');
+    errorEl.innerText = '⏳ در حال بارگذاری...';
+    
+    if (navigator.onLine) {
+        await loadFromCloud();
+    }
+    
+    errorEl.innerText = '';
+    
+    let user=authenticate(u,p);
+    if(user){
+        currentUser=user;
+        showMainApp();
+        cloudSaveUser(user).then(()=>{
+            console.log('✅ کاربر به سرور ارسال شد');
+        }).catch(err=>{
+            console.log('⚠️ خطا در ارسال به سرور:', err);
+        });
+    } else {
+        errorEl.innerText='نام کاربری یا رمز اشتباه است';
+    }
+};
     
     document.getElementById('logout-btn').onclick=()=>{ 
         currentUser=null; 
@@ -890,7 +900,68 @@ window.addEventListener('online', () => {
     console.log('🌐 اتصال برقرار شد - شروع همگام‌سازی');
     syncToCloud();
 });
-
+    // ============ بارگذاری داده‌ها از سرور ============
+async function loadFromCloud() {
+    if (!window.dbClient) return false;
+    if (!navigator.onLine) return false;
+    
+    try {
+        const { data, error } = await window.dbClient.from('profiles').select('*');
+        if (error) {
+            console.error('خطا در بارگذاری:', error);
+            return false;
+        }
+        if (!data || data.length === 0) {
+            console.log('سرور خالی است، از داده‌های محلی استفاده می‌شود');
+            return false;
+        }
+        
+        // آپدیت کاربران موجود و اضافه کردن کاربران جدید
+        for (let serverUser of data) {
+            let localUser = users.find(u => String(u.id) === String(serverUser.id));
+            if (localUser) {
+                // آپدیت کاربر موجود
+                if (serverUser.username) localUser.username = serverUser.username;
+                if (serverUser.password) localUser.password = serverUser.password;
+                if (serverUser.role) localUser.role = serverUser.role;
+                if (serverUser.full_name) localUser.fullName = serverUser.full_name;
+                if (serverUser.score !== null && serverUser.score !== undefined) {
+                    localUser.score = serverUser.score === 999999 ? Infinity : serverUser.score;
+                }
+                if (serverUser.group) localUser.group = serverUser.group;
+                if (serverUser.emoji) localUser.emoji = serverUser.emoji;
+                if (serverUser.referral_code) localUser.referralCode = serverUser.referral_code;
+            } else {
+                // کاربر جدید از سرور - اضافه به لیست محلی
+                users.push({
+                    id: parseInt(serverUser.id),
+                    username: serverUser.username,
+                    password: serverUser.password,
+                    role: serverUser.role,
+                    fullName: serverUser.full_name,
+                    score: serverUser.score === 999999 ? Infinity : (serverUser.score || 0),
+                    group: serverUser.group || null,
+                    image: null,
+                    emoji: serverUser.emoji || '🧒',
+                    childrenIds: null,
+                    personalNote: "",
+                    achievements: [],
+                    referralCode: serverUser.referral_code || null,
+                    referredBy: null,
+                    classes: [],
+                    governorGroup: null
+                });
+            }
+        }
+        
+        saveToLocal();
+        console.log('✅ ' + data.length + ' کاربر از سرور بارگذاری شد');
+        return true;
+    } catch(e) {
+        console.error('خطا در بارگذاری:', e);
+        return false;
+    }
+}
     init();
 
 // بعد از لود شدن صفحه، اتصال رو تست کن
