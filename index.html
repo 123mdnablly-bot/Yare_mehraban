@@ -554,7 +554,7 @@ function showAttendance(){
     html += `</tbody><table><div class="flex"><button id="saveAtt">💾 ذخیره</button><button id="exportAtt">📤 خروجی JSON</button></div>`;
     document.getElementById('content-area').innerHTML = html;
     document.querySelectorAll('[data-u]').forEach(btn=>{
-        btn.onclick=()=>{ if(!attendance[today]) attendance[today]={}; attendance[today][btn.dataset.u]=btn.dataset.st; saveToLocal(); showAttendance(); if(btn.dataset.st==='present'){ let userId=users.find(u=>u.username===btn.dataset.u)?.id; if(userId) checkAndGrantAchievements(userId); } };
+        btn.onclick=()=>{ if(!attendance[today]) attendance[today]={}; attendance[today][btn.dataset.u]=btn.dataset.st; saveToLocal(); saveAttendanceToCloud(btn.dataset.u, today, btn.dataset.st); if(btn.dataset.st==='present'){ let userId=users.find(u=>u.username===btn.dataset.u)?.id; if(userId) checkAndGrantAchievements(userId); } };
     });
     document.getElementById('saveAtt').onclick=()=>{ saveToLocal(); alert('ذخیره شد'); };
     document.getElementById('exportAtt').onclick=()=>{ let a=document.createElement('a'); a.href='data:text/json,'+encodeURIComponent(JSON.stringify({[today]:attendance[today]})); a.download=`attendance_${today}.json`; a.click(); };
@@ -744,6 +744,7 @@ function init(){
     if (navigator.onLine) {
     await loadFromCloud();
     await loadMessagesFromCloud();
+    await loadAttendanceFromCloud();
     }
     
     errorEl.innerText = '';
@@ -909,7 +910,14 @@ async function syncToCloud() {
             if (!error) synced++;
         } catch(e) {}
     }
-    console.log('☁️ همگام‌سازی: ' + synced + '/' + users.length + ' کاربر ذخیره شد');
+        console.log('☁️ همگام‌سازی: ' + synced + '/' + users.length + ' کاربر ذخیره شد');
+    
+    // همگام‌سازی حضور و غیاب
+    for (let [date, records] of Object.entries(attendance)) {
+        for (let [username, status] of Object.entries(records)) {
+            await saveAttendanceToCloud(username, date, status);
+        }
+    }
 }
 
 // وقتی اینترنت برگشت، خودکار همگام‌سازی کن
@@ -1032,6 +1040,45 @@ async function saveMessageToCloud(fromId, toId, text) {
     } catch(e) {
         showTopBar('❌ خطای غیرمنتظره: ' + e.message, '#c0392b');
         console.error('Message save exception:', e);
+    }
+}
+    // ============ همگام‌سازی حضور و غیاب ============
+async function loadAttendanceFromCloud() {
+    if (!window.dbClient || !navigator.onLine) return;
+    try {
+        const { data, error } = await window.dbClient.from('attendance').select('*');
+        if (error || !data) return;
+        
+        // تبدیل داده‌های سرور به فرمت محلی
+        for (let rec of data) {
+            if (!rec.username || !rec.date) continue;
+            if (!attendance[rec.date]) attendance[rec.date] = {};
+            attendance[rec.date][rec.username] = rec.status || 'absent';
+        }
+        saveToLocal();
+        console.log('✅ ' + data.length + ' رکورد حضور از سرور بارگذاری شد');
+    } catch(e) {
+        console.error('خطا در بارگذاری حضور:', e);
+    }
+}
+
+async function saveAttendanceToCloud(username, date, status) {
+    if (!window.dbClient) return;
+    try {
+        const result = await window.dbClient.from('attendance').upsert({
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            username: String(username),
+            date: date,
+            status: status
+        });
+        
+        if (result.error) {
+            console.log('⚠️ خطا در ذخیره حضور:', result.error.message);
+        } else {
+            console.log('✅ حضور ذخیره شد:', username, date, status);
+        }
+    } catch(e) {
+        console.error('خطا:', e);
     }
 }
     init();
