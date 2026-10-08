@@ -458,6 +458,7 @@ function changeScore(uid,delta){
         if(document.getElementById('usersList')) showManageUsers();
         else renderMainMenu();
         updateWelcome();
+        cloudSaveUser(u);
     }
 }
 function deleteUser(uid){ if(uid===13) return alert('حذف مدیر ارشد مجاز نیست'); users=users.filter(u=>u.id!==uid); saveToLocal(); if(document.getElementById('usersList')) showManageUsers(); else renderMainMenu(); }
@@ -504,6 +505,7 @@ function showSolvePuzzles(){
                 let u=users.find(u=>u.id===currentUser.id); if(u) u.score=currentUser.score;
                 solvedPuzzles.push({ userId:currentUser.id, puzzleId:idx });
                 saveToLocal();
+                cloudSaveUser(currentUser);
                 addActivityLog(currentUser.id, "حل معما", `معمای ${puzzles[idx].question} با موفقیت حل شد. +${puzzles[idx].points} امتیاز`);
                 checkAndGrantAchievements(currentUser.id);
                 alert(`✅ صحیح! +${puzzles[idx].points} امتیاز`);
@@ -603,7 +605,7 @@ function manageParentFeedbacks(){ if(currentUser.role !== 'admin' && currentUser
 function showPollManagement(){ if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('فقط مدیر و جانشین'); let html=`<div class="card"><h3>📊 نظرسنجی‌ها</h3><button id="newPollBtn" class="btn-success">➕ نظرسنجی جدید</button><div id="pollsList"></div></div>`; document.getElementById('content-area').innerHTML=html; document.getElementById('newPollBtn').onclick=()=>{ let q=prompt("سوال نظرسنجی:"); if(!q) return; let opts=prompt("گزینه‌ها (با کاما جدا کنید):"); let options=opts?opts.split(',').map(s=>s.trim()):[]; if(options.length<2) return alert("حداقل دو گزینه لازم است"); polls.push({ id:Date.now(), question:q, options:options, votes:[], active:true }); saveToLocal(); showPollManagement(); addNotification(null, "نظرسنجی جدید", `نظرسنجی "${q}" فعال شد`, "polls"); }; function renderPolls(){ let listDiv=document.getElementById('pollsList'); listDiv.innerHTML=''; polls.forEach(p=>{ let totalVotes=p.votes.length; let resultsHtml=p.options.map((opt,idx)=>{ let count=p.votes.filter(v=>v.optionIndex===idx).length; let percent=totalVotes?(count/totalVotes*100).toFixed(1):0; return `<div>${opt}: ${count} رأی (${percent}%)</div>`; }).join(''); listDiv.innerHTML+=`<div class="card"><div><strong>${p.question}</strong> ${p.active?'(فعال)':'(غیرفعال)'}</div><div>${resultsHtml}</div><button class="btn-warning" data-id="${p.id}" data-toggle="active">${p.active?'غیرفعال کردن':'فعال کردن'}</button><button class="btn-danger" data-id="${p.id}" data-delete="true">حذف</button></div>`; }); document.querySelectorAll('[data-toggle]').forEach(btn=>{ btn.onclick=()=>{ let pid=parseInt(btn.dataset.id); let poll=polls.find(p=>p.id===pid); if(poll) poll.active=!poll.active; saveToLocal(); renderPolls(); }; }); document.querySelectorAll('[data-delete]').forEach(btn=>{ btn.onclick=()=>{ let pid=parseInt(btn.dataset.id); polls=polls.filter(p=>p.id!==pid); saveToLocal(); renderPolls(); }; }); } renderPolls(); }
 function voteInPoll(){ let activePolls=polls.filter(p=>p.active); if(!activePolls.length){ alert("هیچ نظرسنجی فعالی وجود ندارد"); return; } let html=`<h3>🗳️ شرکت در نظرسنجی</h3>`; activePolls.forEach(p=>{ let alreadyVoted=p.votes.some(v=>v.userId===currentUser.id); html+=`<div class="card"><div><strong>${p.question}</strong></div>`; p.options.forEach((opt,idx)=>{ if(alreadyVoted) html+=`<div>${opt}</div>`; else html+=`<button class="btn" data-poll="${p.id}" data-opt="${idx}">${opt}</button> `; }); if(alreadyVoted) html+=`<div>✅ شما قبلاً در این نظرسنجی شرکت کرده‌اید.</div>`; html+=`</div>`; }); document.getElementById('content-area').innerHTML=html; document.querySelectorAll('[data-poll]').forEach(btn=>{ btn.onclick=()=>{ let pid=parseInt(btn.dataset.poll); let optIdx=parseInt(btn.dataset.opt); let poll=polls.find(p=>p.id===pid); if(poll && !poll.votes.some(v=>v.userId===currentUser.id)){ poll.votes.push({ userId:currentUser.id, optionIndex:optIdx }); saveToLocal(); addActivityLog(currentUser.id, "شرکت در نظرسنجی", `نظرسنجی "${poll.question}" - گزینه ${poll.options[optIdx]}`); alert("رأی شما ثبت شد"); voteInPoll(); } else alert("شما قبلاً رأی داده‌اید یا نظرسنجی نامعتبر"); }; }); }
 function showTaskManagement(){ if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('فقط مدیر و جانشین'); let html=`<div class="card"><h3>📋 وظایف</h3><button id="newTaskBtn" class="btn-success">➕ وظیفه جدید</button><div id="tasksList"></div></div>`; document.getElementById('content-area').innerHTML=html; document.getElementById('newTaskBtn').onclick=()=>{ let title=prompt("عنوان وظیفه:"); if(!title) return; let desc=prompt("توضیحات:"); let points=parseInt(prompt("امتیاز:"))||5; let deadline=prompt("مهلت (تاریخ مثلاً 1404/02/20):"); tasks.push({ id:Date.now(), title, description:desc, points, deadline, completedBy:[] }); saveToLocal(); showTaskManagement(); addNotification(null, "وظیفه جدید", `وظیفه "${title}" با امتیاز ${points} ایجاد شد`, "tasks"); }; function renderTasks(){ let listDiv=document.getElementById('tasksList'); listDiv.innerHTML=''; tasks.forEach(t=>{ let completedCount=t.completedBy.length; listDiv.innerHTML+=`<div class="card"><div><strong>${t.title}</strong> (امتیاز: ${t.points}) مهلت: ${t.deadline||'نامشخص'}</div><div>${t.description||''}</div><div>تکمیل شده توسط: ${completedCount} نفر</div><button class="btn-danger" data-id="${t.id}" data-delete="true">حذف وظیفه</button></div>`; }); document.querySelectorAll('[data-delete]').forEach(btn=>{ btn.onclick=()=>{ let tid=parseInt(btn.dataset.id); tasks=tasks.filter(t=>t.id!==tid); saveToLocal(); renderTasks(); }; }); } renderTasks(); }
-function showTasksForUser(){ let activeTasks=tasks.filter(t=>!t.completedBy.includes(currentUser.id)); if(!activeTasks.length){ alert("هیچ وظیفه‌ای برای انجام ندارید"); return; } let html=`<h3>📋 وظایف من</h3>`; activeTasks.forEach(t=>{ html+=`<div class="card"><div><strong>${t.title}</strong> (امتیاز: ${t.points}) - مهلت: ${t.deadline||'نامشخص'}</div><div>${t.description||''}</div><button class="btn-success" data-id="${t.id}">✅ انجام دادم</button></div>`; }); document.getElementById('content-area').innerHTML=html; document.querySelectorAll('[data-id]').forEach(btn=>{ btn.onclick=()=>{ let tid=parseInt(btn.dataset.id); let task=tasks.find(t=>t.id===tid); if(task && !task.completedBy.includes(currentUser.id)){ task.completedBy.push(currentUser.id); currentUser.score += task.points; let u=users.find(u=>u.id===currentUser.id); if(u) u.score=currentUser.score; saveToLocal(); addActivityLog(currentUser.id, "انجام وظیفه", `وظیفه "${task.title}" انجام شد. +${task.points} امتیاز`); checkAndGrantAchievements(currentUser.id); alert(`✅ وظیفه انجام شد! +${task.points} امتیاز`); showTasksForUser(); updateWelcome(); } }; }); }
+function showTasksForUser(){ let activeTasks=tasks.filter(t=>!t.completedBy.includes(currentUser.id)); if(!activeTasks.length){ alert("هیچ وظیفه‌ای برای انجام ندارید"); return; } let html=`<h3>📋 وظایف من</h3>`; activeTasks.forEach(t=>{ html+=`<div class="card"><div><strong>${t.title}</strong> (امتیاز: ${t.points}) - مهلت: ${t.deadline||'نامشخص'}</div><div>${t.description||''}</div><button class="btn-success" data-id="${t.id}">✅ انجام دادم</button></div>`; }); document.getElementById('content-area').innerHTML=html; document.querySelectorAll('[data-id]').forEach(btn=>{ btn.onclick=()=>{ let tid=parseInt(btn.dataset.id); let task=tasks.find(t=>t.id===tid); if(task && !task.completedBy.includes(currentUser.id)){ task.completedBy.push(currentUser.id); currentUser.score += task.points; let u=users.find(u=>u.id===currentUser.id); if(u) u.score=currentUser.score; ,saveToLocal(); cloudSaveUser(currentUser); addActivityLog(currentUser.id, "انجام وظیفه",  "${task.title}" انجام شد. +${task.points} امتیاز`); checkAndGrantAchievements(currentUser.id); alert(`✅ وظیفه انجام شد! +${task.points} امتیاز`); showTasksForUser(); updateWelcome(); } }; }); }
 
 // ---------------------------- آمار، گالری، کلاس‌ها ----------------------------
 function showGroupStats(){ if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('فقط مدیر و جانشین'); let groups={}; users.forEach(u=>{ if(u.group && u.role!=='admin'){ if(!groups[u.group]) groups[u.group]=[]; groups[u.group].push(u); } }); let html=`<h3>📊 آمار گروه‌ها (نمودار متنی)</h3>`; for(let g in groups){ let members=groups[g]; let avgScore=members.reduce((s,u)=>s+u.score,0)/members.length; let totalPresent=0, totalDays=Object.keys(attendance).length; members.forEach(u=>{ let presentCount=Object.values(attendance).filter(day=>day[u.username]==='present').length; totalPresent+=presentCount; }); let attendancePercent=totalDays?(totalPresent/(members.length*totalDays)*100).toFixed(1):0; let scoreBar="█".repeat(Math.floor(avgScore/100))+"░".repeat(Math.max(0,10-Math.floor(avgScore/100))); let attBar="█".repeat(Math.floor(attendancePercent/10))+"░".repeat(Math.max(0,10-Math.floor(attendancePercent/10))); html+=`<div class="card"><h4>گروه ${g}</h4><p>تعداد اعضا: ${members.length}</p><p>میانگین امتیاز: ${avgScore.toFixed(1)} <span style="font-family:monospace;">${scoreBar}</span></p><p>درصد حضور: ${attendancePercent}% <span style="font-family:monospace;">${attBar}</span></p></div>`; } document.getElementById('content-area').innerHTML=html; }
@@ -641,11 +643,13 @@ function smartReminder(){ let today = new Date().toISOString().slice(0,10); for(
 function addSubmenu(parent, title, items){ let div=document.createElement('div'); div.className='submenu'; let sum=document.createElement('summary'); sum.innerHTML=`<span style="font-weight:bold;">📁 ${title}</span>`; div.appendChild(sum); items.forEach(([text,func])=>{ let btn=document.createElement('button'); btn.textContent=text; btn.onclick=func; div.appendChild(btn); }); parent.appendChild(div); }
 function showAdvancedReports() { let html = `<div class="card"><h3>📊 گزارش‌های آماری</h3><canvas id="statsChart" width="400" height="200"></canvas><button id="exportPdfReport" class="btn-purple">📄 خروجی PDF</button><button id="backToMenu" class="btn">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; const ctx = document.getElementById('statsChart').getContext('2d'); const groups = {}; users.forEach(u => { if(u.group && u.role !== 'admin') { groups[u.group] = (groups[u.group] || 0) + u.score; } }); new Chart(ctx, { type: 'bar', data: { labels: Object.keys(groups), datasets: [{ label: 'مجموع امتیازات گروه', data: Object.values(groups), backgroundColor: '#2c7da0' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } }); document.getElementById('exportPdfReport').onclick = () => { html2pdf().from(document.getElementById('content-area')).save(); }; document.getElementById('backToMenu').onclick = () => renderMainMenu(); }
 async function exportBackupAsQR() { const fullData = { users, programs, puzzles, solvedPuzzles, messages, chatMemory, quizzes, quizResults, attendance, ministerApproval, advisorEvaluation, parentFeedbacks, examSettings, polls, tasks, notifications, activityLog, userReferrals, transactions, gallery, classes }; const jsonStr = JSON.stringify(fullData); const blob = new Blob([jsonStr], {type: "application/json"}); const url = URL.createObjectURL(blob); const qr = qrcode(0, 'M'); qr.addData(url); qr.make(); const cellSize = 4; const qrCanvas = qr.createImgTag(cellSize); const modalDiv = document.createElement('div'); modalDiv.className = 'modal'; modalDiv.innerHTML = `<div class="modal-content"><h3>📸 بکاپ با QR</h3><div class="qr-canvas">${qrCanvas}</div><p>این QR شامل لینک دانلود فایل بکاپ است. با اسکن آن توسط گزینه «ورود با اسکن QR» می‌توانید بکاپ را بازیابی کنید.</p><a href="${url}" download="yare_backup_${Date.now()}.json" class="btn-success">⬇️ دانلود مستقیم فایل</a><br><button id="closeQRModal" class="btn">بستن</button></div>`; document.body.appendChild(modalDiv); document.getElementById('closeQRModal').onclick = () => { URL.revokeObjectURL(url); modalDiv.remove(); }; }
-    function startAutoSave(){ 
-    if(autoSaveInterval) clearInterval(autoSaveInterval); 
-    autoSaveInterval = setInterval(() => { 
-        saveToLocal(); 
+    function startAutoSave(){
+    if(autoSaveInterval) clearInterval(autoSaveInterval);
+    autoSaveInterval = setInterval(() => {
+        saveToLocal();
+        syncToCloud();
     }, 30000);
+    }
  }       
 // ---------------------------- منوی اصلی و راه‌اندازی ----------------------------
 function renderMainMenu(){
@@ -831,6 +835,37 @@ async function testSaveToServer() {
         console.error('Errors:', errors);
     }
     }
+    // ============ همگام‌سازی کامل با سرور ============
+async function syncToCloud() {
+    if (!window.dbClient) return;
+    if (!navigator.onLine) return;
+    
+    let synced = 0;
+    for (let user of users) {
+        try {
+            const { error } = await window.dbClient.from('profiles').upsert({
+                id: String(user.id),
+                username: user.username,
+                password: user.password,
+                role: user.role,
+                full_name: user.fullName,
+                score: (user.score === Infinity || user.score === null) ? 999999 : Number(user.score) || 0,
+                "group": user.group || null,
+                emoji: user.emoji || 'user',
+                referral_code: user.referralCode || null
+            });
+            if (!error) synced++;
+        } catch(e) {}
+    }
+    console.log('☁️ همگام‌سازی: ' + synced + '/' + users.length + ' کاربر ذخیره شد');
+}
+
+// وقتی اینترنت برگشت، خودکار همگام‌سازی کن
+window.addEventListener('online', () => {
+    console.log('🌐 اتصال برقرار شد - شروع همگام‌سازی');
+    syncToCloud();
+});
+
     init();
 
 // بعد از لود شدن صفحه، اتصال رو تست کن
