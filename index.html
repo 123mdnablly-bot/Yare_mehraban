@@ -595,8 +595,24 @@ function exportFullBackup(){ let data = { users, programs, puzzles, solvedPuzzle
 function importFullJSON(){ if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('فقط مدیر و جانشین'); let inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=e=>{ let f=e.target.files[0]; if(!f) return; let fr=new FileReader(); fr.onload=ev=>{ try{ let d=JSON.parse(ev.target.result); if(confirm("آیا می‌خواهید کل اطلاعات را با فایل انتخاب شده جایگزین کنید؟ این عمل غیرقابل بازگشت است.")){ if(d.users) users = d.users; if(d.programs) programs = d.programs; if(d.puzzles) puzzles = d.puzzles; if(d.solvedPuzzles) solvedPuzzles = d.solvedPuzzles; if(d.messages) messages = d.messages; if(d.chatMemory) chatMemory = d.chatMemory; if(d.quizzes) quizzes = d.quizzes; if(d.quizResults) quizResults = d.quizResults; if(d.attendance) attendance = d.attendance; if(d.ministerApproval) ministerApproval = d.ministerApproval; if(d.advisorEvaluation) advisorEvaluation = d.advisorEvaluation; if(d.parentFeedbacks) parentFeedbacks = d.parentFeedbacks; if(d.examSettings) examSettings = d.examSettings; if(d.polls) polls = d.polls; if(d.tasks) tasks = d.tasks; if(d.notifications) notifications = d.notifications; if(d.activityLog) activityLog = d.activityLog; if(d.userReferrals) userReferrals = d.userReferrals; if(d.transactions) transactions = d.transactions; if(d.gallery) gallery = d.gallery; if(d.classes) classes = d.classes; saveToLocal(); alert("واردات با موفقیت انجام شد. صفحه دوباره بارگذاری می‌شود."); location.reload(); } } catch(e){ alert('فایل JSON نامعتبر'); } }; fr.readAsText(f); }; inp.click(); }
 function exportCSV(){ let csvRows=[["نام کامل","نام کاربری","نقش","گروه","امتیاز","تعداد حضور","میانگین نمرات آزمون","تعداد دستاوردها"]]; for(let u of users.filter(u=>u.role!=='admin')){ let presentCount=Object.values(attendance).filter(day=>day[u.username]==='present').length; let userQuizScores=quizResults.filter(r=>r.userId===u.id).map(r=>r.score); let avgScore=userQuizScores.length?(userQuizScores.reduce((a,b)=>a+b,0)/userQuizScores.length).toFixed(1):"—"; let scoreDisplay = u.score===Infinity ? "∞" : u.score; csvRows.push([u.fullName, u.username, u.role, u.group||"—", scoreDisplay, presentCount, avgScore, (u.achievements||[]).length]); } let csvContent=csvRows.map(row=>row.join(",")).join("\n"); let blob=new Blob(["\uFEFF"+csvContent],{type:"text/csv;charset=utf-8;"}); let link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=`users_report_${Date.now()}.csv`; link.click(); alert("گزارش CSV دانلود شد"); }
 function showStorageStatus(){ let data=localStorage.getItem("yare_data"); if(data){ try{ let d=JSON.parse(data); alert(`تعداد کاربران: ${d.users?.length || 0}`); } catch(e){ alert("داده ذخیره شده خراب است"); } } else { alert("هیچ داده‌ای در حافظه محلی یافت نشد."); } }
-function backupToEmail(){ let data = { users, programs, puzzles, solvedPuzzles, messages, chatMemory, quizzes, quizResults, attendance, ministerApproval, advisorEvaluation, parentFeedbacks, examSettings, polls, tasks, notifications, activityLog, userReferrals, transactions, gallery, classes }; let json=JSON.stringify(data); let mailto=`mailto:?subject=پشتیبان یار مهربان&body=${encodeURIComponent(json)}`; window.location.href=mailto; alert("لطفاً ایمیل خود را باز کرده و فایل را ذخیره کنید."); }
-function showSendMessage(){ let recs=users.filter(u=>u.id!==currentUser.id); if(!recs.length) return; let html=`<h3>📨 ارسال پیام</h3><select id="toId">${recs.map(r=>`<option value="${r.id}">${r.fullName} (${r.role})</option>`).join('')}</select><textarea id="msgText" rows="3"></textarea><button id="sendMsgBtn" class="btn-success">ارسال</button>`; document.getElementById('content-area').innerHTML=html; document.getElementById('sendMsgBtn').onclick=()=>{ let toId=parseInt(document.getElementById('toId').value); let text=document.getElementById('msgText').value.trim(); if(!text) return; messages.push({ id:Date.now(), fromId:currentUser.id, toId, text, date:new Date().toLocaleString(), isRead:false }); saveToLocal(); addNotification(toId, "پیام جدید", `از طرف ${currentUser.fullName}: ${text.substring(0,50)}...`, ""); alert('پیام ارسال شد'); renderMainMenu(); }; }
+function backupToEmail(){ let dataپیا = { users, programs, puzzles, solvedPuzzles, messages, chatMemory, quizzes, quizResults, attendance, ministerApproval, advisorEvaluation, parentFeedbacks, examSettings, polls, tasks, notifications, activityLog, userReferrals, transactions, gallery, classes }; let json=JSON.stringify(data); let mailto=`mailto:?subject=پشتیبان یار مهربان&body=${encodeURIComponent(json)}`; window.location.href=mailto; alert("لطفاً ایمیل خود را باز کرده و فایل را ذخیره کنید."); }
+function showSendMessage(){ 
+    let recs=users.filter(u=>u.id!==currentUser.id); 
+    if(!recs.length) return; 
+    let html=`<h3>📨 ارسال پیام</h3><select id="toId">${recs.map(r=>`<option value="${r.id}">${r.fullName} (${r.role})</option>`).join('')}</select><textarea id="msgText" rows="3"></textarea><button id="sendMsgBtn" class="btn-success">ارسال</button>`; 
+    document.getElementById('content-area').innerHTML=html; 
+    document.getElementById('sendMsgBtn').onclick=()=>{ 
+        let toId=parseInt(document.getElementById('toId').value); 
+        let text=document.getElementById('msgText').value.trim(); 
+        if(!text) return; 
+        messages.push({ id:Date.now(), fromId:currentUser.id, toId, text, date:new Date().toLocaleString(), isRead:false }); 
+        saveToLocal(); 
+        saveMessageToCloud(currentUser.id, toId, text); 
+        addNotification(toId, "پیام جدید", `از طرف ${currentUser.fullName}: ${text.substring(0,50)}...`, ""); 
+        alert('پیام ارسال شد'); 
+        renderMainMenu(); 
+    }; 
+}
 function showMessages(){ let relevant=messages.filter(m=>m.fromId===currentUser.id || m.toId===currentUser.id); if(!relevant.length){ alert('هیچ پیامی نیست'); return; } let html=`<h3>📬 پیام‌ها</h3>`; relevant.forEach(m=>{ let sender=users.find(u=>u.id===m.fromId); let receiver=users.find(u=>u.id===m.toId); let isMine=m.toId===currentUser.id; html+=`<div class="card"><div>${isMine?`از: ${sender.fullName}`:`به: ${receiver.fullName}`}</div><div>${m.date}</div><div>${m.text}</div></div>`; }); document.getElementById('content-area').innerHTML=html; }
 function showParentPanel(){ if(currentUser.role!=='parent') return alert('دسترسی محدود به والدین'); let children=users.filter(u=>currentUser.childrenIds?.includes(u.id)); if(!children.length){ alert('هیچ فرزندی برای شما ثبت نشده است'); return; } let html=`<h3>👪 وضعیت فرزندان</h3>`; children.forEach(child=>{ let childResults=quizResults.filter(r=>r.userId===child.id); let attList=Object.entries(attendance).map(([d,obj])=>({date:d,status:obj[child.username]})).filter(a=>a.status); html+=`<div class="card"><h4>${child.fullName}</h4><p>⭐ امتیاز: ${child.score===Infinity?'∞':child.score}</p><p>📝 نمرات آزمون: ${childResults.map(r=>r.score).join(', ')||'هیچ'}</p><p>📋 حضور: ${attList.map(a=>`${a.date}: ${a.status==='present'?'حاضر':'غایب'}`).join(' , ')||'ثبتی نیست'}</p><textarea id="fb_${child.id}" rows="2" placeholder="بازخورد خود را برای مربیان بنویسید..."></textarea><button class="btn-success" data-child="${child.id}">ارسال بازخورد</button><hr><h5>پاسخ مربیان:</h5><div id="replies_${child.id}">`; let replies=parentFeedbacks.filter(fb=>fb.childId===child.id && fb.reply); if(replies.length) replies.forEach(r=>html+=`<div><strong>پاسخ:</strong> ${r.reply} (${r.replyDate})</div>`); else html+=`<div>هیچ پاسخی ثبت نشده است.</div>`; html+=`</div></div>`; }); document.getElementById('content-area').innerHTML=html; document.querySelectorAll('[data-child]').forEach(btn=>{ btn.onclick=()=>{ let childId=parseInt(btn.dataset.child); let msg=document.getElementById(`fb_${childId}`).value.trim(); if(!msg) return; parentFeedbacks.push({ parentId:currentUser.id, childId, message:msg, date:new Date().toLocaleString(), reply:null, replyDate:null }); saveToLocal(); alert('بازخورد شما با موفقیت ثبت شد'); showParentPanel(); addNotification(1, "بازخورد والدین", `بازخورد جدید از ${currentUser.fullName} برای ${users.find(u=>u.id===childId)?.fullName}: ${msg.substring(0,50)}...`, "parentFeedback"); }; }); }
 function manageParentFeedbacks(){ if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('فقط مدیر و جانشین'); let pending=parentFeedbacks.filter(fb=>!fb.reply); if(!pending.length){ alert('هیچ بازخورد پاسخ داده نشده‌ای وجود ندارد'); return; } let html=`<h3>📝 پاسخ به بازخورد والدین</h3>`; pending.forEach((fb,idx)=>{ let parent=users.find(u=>u.id===fb.parentId); let child=users.find(u=>u.id===fb.childId); html+=`<div class="card"><div><strong>از: ${parent?.fullName}</strong> درباره ${child?.fullName}</div><div>${fb.message}</div><div>تاریخ: ${fb.date}</div><textarea id="reply_${idx}" rows="2" placeholder="پاسخ خود را بنویسید..."></textarea><button class="btn-success" data-idx="${idx}">ارسال پاسخ</button></div>`; }); document.getElementById('content-area').innerHTML=html; document.querySelectorAll('[data-idx]').forEach(btn=>{ btn.onclick=()=>{ let idx=parseInt(btn.dataset.idx); let reply=document.getElementById(`reply_${idx}`).value.trim(); if(!reply) return; parentFeedbacks[idx].reply=reply; parentFeedbacks[idx].replyDate=new Date().toLocaleString(); saveToLocal(); addNotification(parentFeedbacks[idx].parentId, "پاسخ به بازخورد شما", `پاسخ مدیر: ${reply.substring(0,50)}...`, ""); alert("پاسخ ذخیره شد"); manageParentFeedbacks(); }; }); }
@@ -726,7 +742,8 @@ function init(){
     errorEl.innerText = '⏳ در حال بارگذاری...';
     
     if (navigator.onLine) {
-        await loadFromCloud();
+    await loadFromCloud();
+    await loadMessagesFromCloud();
     }
     
     errorEl.innerText = '';
@@ -960,6 +977,49 @@ async function loadFromCloud() {
     } catch(e) {
         console.error('خطا در بارگذاری:', e);
         return false;
+    }
+}
+    // ============ همگام‌سازی پیام‌ها ============
+async function loadMessagesFromCloud() {
+    if (!window.dbClient || !navigator.onLine) return;
+    try {
+        const { data, error } = await window.dbClient.from('messages').select('*').order('created_at', {ascending: true});
+        if (error || !data) return;
+        
+        // تبدیل داده‌های سرور به فرمت محلی
+        let cloudMessages = data.map(m => ({
+            id: m.id || Date.now() + Math.random(),
+            fromId: parseInt(m.from_user) || m.from_user,
+            toId: parseInt(m.to_user) || m.to_user,
+            text: m.text,
+            date: m.created_at ? new Date(m.created_at).toLocaleString() : new Date().toLocaleString(),
+            isRead: false
+        }));
+        
+        // ادغام پیام‌های سرور با محلی (بدون تکرار)
+        for (let cm of cloudMessages) {
+            if (!messages.some(m => m.id === cm.id || (m.fromId === cm.fromId && m.toId === cm.toId && m.text === cm.text))) {
+                messages.push(cm);
+            }
+        }
+        saveToLocal();
+        console.log('✅ ' + cloudMessages.length + ' پیام از سرور بارگذاری شد');
+    } catch(e) {
+        console.error('خطا در بارگذاری پیام‌ها:', e);
+    }
+}
+
+async function saveMessageToCloud(fromId, toId, text) {
+    if (!window.dbClient) return;
+    try {
+        await window.dbClient.from('messages').insert({
+            from_user: String(fromId),
+            to_user: String(toId),
+            text: text
+        });
+        console.log('✅ پیام در سرور ذخیره شد');
+    } catch(e) {
+        console.error('خطا در ذخیره پیام:', e);
     }
 }
     init();
