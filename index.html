@@ -663,27 +663,38 @@ function importFromQR() {
     }
     // ============ تست اتصال Supabase ============
 async function testSupabaseConnection() {
+    let msg = '';
+    let color = '#000';
+    
     if (!window.dbClient) {
-        console.error('❌ dbClient وجود ندارد');
-        alert('❌ اتصال به Supabase برقرار نشد');
-        return;
+        msg = '❌ dbClient تعریف نشده - مشکل در اتصال اولیه';
+        color = '#c0392b';
+    } else {
+        try {
+            const { data, error } = await window.dbClient.from('profiles').select('id').limit(1);
+            if (error) {
+                msg = '❌ خطای Supabase: ' + error.message + ' | کد: ' + error.code;
+                color = '#c0392b';
+            } else {
+                msg = '✅ اتصال به Supabase برقرار است (' + data.length + ' رکورد خوانده شد)';
+                color = '#14503a';
+            }
+        } catch(e) {
+            msg = '❌ خطای غیرمنتظره: ' + e.message;
+            color = '#c0392b';
+        }
     }
     
-    try {
-        const { data, error } = await window.dbClient.from('profiles').select('id').limit(1);
-        if (error) {
-            console.error('❌ خطای Supabase:', error);
-            alert('❌ خطا: ' + error.message);
-        } else {
-            console.log('✅ اتصال به Supabase موفق بود. تعداد رکورد تست:', data.length);
-            alert('✅ اتصال به Supabase برقرار است!');
-        }
-    } catch(e) {
-        console.error('❌ خطای غیرمنتظره:', e);
-        alert('❌ خطا: ' + e.message);
-    }
+    console.log('=== تست Supabase ===', msg);
+    
+    // نمایش روی صفحه (نوار بالای صفحه)
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:' + color + ';color:#fff;padding:15px;z-index:99999;text-align:center;font-family:sans-serif;font-size:14px;cursor:pointer;direction:rtl;';
+    div.textContent = msg + ' (برای بستن بزن)';
+    div.onclick = () => div.remove();
+    document.body.appendChild(div);
 }
-init();
+    init();
 
 // بعد از لود شدن صفحه، اتصال رو تست کن
 window.addEventListener('load', () => {
