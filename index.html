@@ -752,6 +752,43 @@ async function testSupabaseConnection() {
     div.onclick = () => div.remove();
     document.body.appendChild(div);
 }
+    function showTopBar(msg, color) {
+    const existing = document.getElementById('topBarMsg');
+    if (existing) existing.remove();
+    const div = document.createElement('div');
+    div.id = 'topBarMsg';
+    div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:' + color + ';color:#fff;padding:15px;z-index:99999;text-align:center;font-family:sans-serif;font-size:13px;cursor:pointer;direction:rtl;line-height:1.6;';
+    div.textContent = msg + ' (برای بستن بزن)';
+    div.onclick = () => div.remove();
+    document.body.appendChild(div);
+}
+
+async function testSaveToServer() {
+    showTopBar('⏳ شروع تست...', '#f39c12');
+    if (!currentUser) { showTopBar('❌ کاربر وارد نشده', '#c0392b'); return; }
+    if (!window.dbClient) { showTopBar('❌ dbClient وجود ندارد', '#c0392b'); return; }
+    showTopBar('📤 در حال ارسال ' + currentUser.username + '...', '#3498db');
+    try {
+        const result = await window.dbClient.from('profiles').upsert({
+            id: String(currentUser.id),
+            username: currentUser.username,
+            password: currentUser.password,
+            role: currentUser.role,
+            full_name: currentUser.fullName,
+            score: (currentUser.score === Infinity || currentUser.score === null) ? 999999 : Number(currentUser.score) || 0,
+            "group": currentUser.group || null,
+            emoji: currentUser.emoji || 'user',
+            referral_code: currentUser.referralCode || null
+        });
+        if (result.error) {
+            showTopBar('❌ خطا: ' + result.error.message + ' | کد: ' + result.error.code, '#c0392b');
+        } else {
+            showTopBar('✅ موفق! کاربر ذخیره شد', '#14503a');
+        }
+    } catch(e) {
+        showTopBar('❌ خطای غیرمنتظره: ' + e.message, '#c0392b');
+    }
+}
     init();
 
 // بعد از لود شدن صفحه، اتصال رو تست کن
