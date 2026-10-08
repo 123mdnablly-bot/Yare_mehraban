@@ -1010,16 +1010,28 @@ async function loadMessagesFromCloud() {
 }
 
 async function saveMessageToCloud(fromId, toId, text) {
-    if (!window.dbClient) return;
+    if (!window.dbClient) {
+        showTopBar('❌ dbClient وجود ندارد', '#c0392b');
+        return;
+    }
     try {
-        await window.dbClient.from('messages').insert({
+        const result = await window.dbClient.from('messages').insert({
+            id: Date.now(),
             from_user: String(fromId),
             to_user: String(toId),
             text: text
         });
-        console.log('✅ پیام در سرور ذخیره شد');
+        
+        if (result.error) {
+            showTopBar('❌ خطای پیام: ' + result.error.message + ' | کد: ' + result.error.code, '#c0392b');
+            console.error('Message save error:', result.error);
+        } else {
+            showTopBar('✅ پیام در سرور ذخیره شد', '#14503a');
+            console.log('✅ پیام در سرور ذخیره شد');
+        }
     } catch(e) {
-        console.error('خطا در ذخیره پیام:', e);
+        showTopBar('❌ خطای غیرمنتظره: ' + e.message, '#c0392b');
+        console.error('Message save exception:', e);
     }
 }
     init();
