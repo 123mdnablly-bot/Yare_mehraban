@@ -395,7 +395,11 @@ function updateUnreadCount(){ let unread = notifications.filter(n => n.userId ==
 function showNotifications(){ let userNotifs = notifications.filter(n => n.userId === currentUser.id).reverse(); let html = `<div class="card"><h3>🔔 اعلان‌ها</h3><div id="notifList">`; if(userNotifs.length === 0) html += "<p>هیچ اعلانی وجود ندارد.</p>"; userNotifs.forEach(n => { html += `<div class="user-row" style="background:${n.isRead?'#e9ecef':'#fff3cd'}; margin-bottom:8px;"><div><strong>${n.title}</strong><br>${n.body}<br><small>${n.date}</small></div>${!n.isRead ? `<button class="btn-success" data-id="${n.id}">خوانده شد</button>` : ''}${n.link ? `<button class="btn" data-link="${n.link}">مشاهده</button>` : ''}</div>`; }); html += `</div><button id="markAllRead" class="btn-warning">همه خوانده شد</button><button id="closeNotif" class="btn">بستن</button></div>`; document.getElementById('content-area').innerHTML = html; document.querySelectorAll('[data-id]').forEach(btn => { btn.onclick = () => { let id = parseInt(btn.dataset.id); let notif = notifications.find(n=>n.id===id); if(notif) notif.isRead = true; saveToLocal(); showNotifications(); updateUnreadCount(); }; }); document.querySelectorAll('[data-link]').forEach(btn => { btn.onclick = () => { let link = btn.dataset.link; if(link === "polls") showPollManagement(); else if(link === "tasks") showTaskManagement(); else if(link === "programs") showManagePrograms(); else renderMainMenu(); }; }); document.getElementById('markAllRead').onclick = () => { notifications.forEach(n => { if(n.userId === currentUser.id) n.isRead = true; }); saveToLocal(); showNotifications(); updateUnreadCount(); }; document.getElementById('closeNotif').onclick = () => renderMainMenu(); }
 function checkAndGrantAchievements(userId){ let user = users.find(u=>u.id===userId); if(!user) return; let newAchievements = []; for(let ach of achievementsList){ if(!user.achievements.includes(ach.id) && ach.condition(user)){ user.achievements.push(ach.id); newAchievements.push(ach.title); addNotification(userId, "🏆 دستاورد جدید", `شما موفق به دریافت مدال "${ach.title}" شدید!`, ""); } } if(newAchievements.length) saveToLocal(); }
 function showUserAchievements(userId){ let user = users.find(u=>u.id===userId); if(!user) return; let earned = user.achievements || []; let html = `<div class="card"><h3>🏆 دستاوردهای ${user.fullName}</h3><div class="flex">`; for(let ach of achievementsList){ let has = earned.includes(ach.id); html += `<div class="achievement-badge" style="background:${has?'#f1c40f':'#95a5a6'};">${ach.title} ${has?'✅':'❌'}<br><small>${ach.desc}</small></div>`; } html += `</div><button class="btn" onclick="renderMainMenu()">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; }
-function addActivityLog(userId, action, details){ activityLog.push({ userId, action, details, date: new Date().toLocaleString() }); saveToLocal(); }
+function addActivityLog(userId, action, details){ 
+    activityLog.push({ id: Date.now(), userId, action, details, date: new Date().toLocaleString() }); 
+    saveToLocal(); 
+    saveActivityToCloud(userId, action, details);
+}
 function showUserActivity(userId){ let userLogs = activityLog.filter(l=>l.userId===userId).reverse(); let html = `<div class="card"><h3>📜 تاریخچه فعالیت‌های ${users.find(u=>u.id===userId)?.fullName}</h3>`; if(userLogs.length===0) html += "<p>هیچ فعالیتی ثبت نشده است.</p>"; else { html += `<table style="width:100%"><thead><tr><th>تاریخ</th><th>فعالیت</th><th>جزئیات</th></tr></thead><tbody>`; userLogs.forEach(log => { html += `<tr><td>${log.date}</td><td>${log.action}</td><td>${log.details || ''}‌</td></tr>`; }); html += `</tbody><table>`; } html += `<button class="btn" onclick="renderMainMenu()">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; }
 function showDateConverter(){ let html = `<div class="card"><h3>🔄 تبدیل تاریخ شمسی و میلادی</h3><div class="flex"><input type="text" id="jalaliInput" placeholder="تاریخ شمسی (مثال: 1403/12/25)"><button id="toGregorian">به میلادی</button></div><div id="gregorianResult"></div><hr><div class="flex"><input type="text" id="gregorianInput" placeholder="تاریخ میلادی (مثال: 2025/03/16)"><button id="toJalali">به شمسی</button></div><div id="jalaliResult"></div><button class="btn" onclick="renderMainMenu()">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; document.getElementById('toGregorian').onclick = () => { document.getElementById('gregorianResult').innerHTML = "تبدیل دقیق نیاز به الگوریتم دارد. لطفاً از تقویم آنلاین کمک بگیرید."; }; document.getElementById('toJalali').onclick = () => { document.getElementById('jalaliResult').innerHTML = "تبدیل دقیق نیاز به الگوریتم دارد."; }; }
 function printUserReport(userId){ let user = users.find(u=>u.id===userId); if(!user) return; let presentCount = Object.values(attendance).filter(day => day[user.username] === 'present').length; let userQuizzes = quizResults.filter(r=>r.userId===userId).map(q=>`${quizzes.find(qz=>qz.id===q.quizId)?.title||'بدون عنوان'}: ${q.score}`); let userTasks = tasks.filter(t=>t.completedBy.includes(userId)).map(t=>t.title); let win = window.open('', '_blank'); win.document.write(`<html dir="rtl"><head><title>کارنامه ${user.fullName}</title><style>body{font-family:sans-serif;padding:20px;} .card{max-width:600px;margin:auto;border:2px solid #2c7da0;border-radius:20px;padding:20px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:6px;}</style></head><body><div class="card"><h2 style="text-align:center;">کارنامه ${user.fullName}</h2><p><strong>نقش:</strong> ${user.role} | <strong>گروه:</strong> ${user.group||'—'} | <strong>امتیاز کل:</strong> ${user.score===Infinity?'∞':user.score}</p><h3>حضور و غیاب</h3><p>تعداد حضور: ${presentCount}</p><h3>آزمون‌ها</h3><p>${userQuizzes.join('<br>') || 'هیچ'}</p><h3>وظایف انجام شده</h3><p>${userTasks.join('<br>') || 'هیچ'}</p><h3>دستاوردها</h3><p>${(user.achievements||[]).map(a=>achievementsList.find(ac=>ac.id===a)?.title).join('<br>') || 'هیچ'}</p><div style="text-align:center; margin-top:20px;">تاریخ چاپ: ${new Date().toLocaleDateString('fa-IR')}</div></div></body></html>`); win.print(); win.close(); }
@@ -521,7 +525,16 @@ function showManagePuzzles(){
     html+=`<hr><h4>➕ افزودن معما</h4><input id="pq" placeholder="سوال"><input id="pa" placeholder="پاسخ"><input id="pp" placeholder="امتیاز" value="10"><button id="addPuzBtn" class="btn-success">افزودن</button>`;
     document.getElementById('content-area').innerHTML = html;
     document.querySelectorAll('[data-pid]').forEach(b=>b.onclick=()=>{ puzzles.splice(parseInt(b.dataset.pid),1); saveToLocal(); showManagePuzzles(); });
-    document.getElementById('addPuzBtn').onclick = ()=>{ let q=document.getElementById('pq').value.trim(), a=document.getElementById('pa').value.trim().toLowerCase(), pts=parseInt(document.getElementById('pp').value)||10; if(q&&a) puzzles.push({question:q, answer:a, points:pts}); saveToLocal(); showManagePuzzles(); };
+    document.getElementById('addPuzBtn').onclick = ()=>{ 
+    let q=document.getElementById('pq').value.trim(), a=document.getElementById('pa').value.trim().toLowerCase(), pts=parseInt(document.getElementById('pp').value)||10; 
+    if(q&&a){ 
+        let newPuzzle = {id:Date.now(), question:q, answer:a, points:pts}; 
+        puzzles.push(newPuzzle); 
+        saveToLocal(); 
+        savePuzzleToCloud(newPuzzle); 
+    } 
+    showManagePuzzles(); 
+};
 }
 
 // ---------------------------- چت‌بات و ارتباطات ----------------------------
@@ -745,6 +758,8 @@ function init(){
     await loadFromCloud();
     await loadMessagesFromCloud();
     await loadAttendanceFromCloud();
+    await loadActivityFromCloud();
+    await loadPuzzlesFromCloud();
     }
     
     errorEl.innerText = '';
@@ -1080,6 +1095,79 @@ async function saveAttendanceToCloud(username, date, status) {
     } catch(e) {
         console.error('خطا:', e);
     }
+}
+    // ============ همگام‌سازی فعالیت‌ها ============
+async function loadActivityFromCloud() {
+    if (!window.dbClient || !navigator.onLine) return;
+    try {
+        const { data, error } = await window.dbClient.from('activity_log').select('*').order('id', {ascending: false}).limit(500);
+        if (error || !data) return;
+        
+        for (let rec of data) {
+            if (!activityLog.some(a => a.id === rec.id)) {
+                activityLog.push({
+                    id: rec.id,
+                    userId: parseInt(rec.username) || rec.username,
+                    action: rec.action,
+                    details: rec.details,
+                    date: rec.date || new Date().toLocaleString()
+                });
+            }
+        }
+        saveToLocal();
+        console.log('✅ ' + data.length + ' فعالیت از سرور بارگذاری شد');
+    } catch(e) {
+        console.error('خطا در بارگذاری فعالیت‌ها:', e);
+    }
+}
+
+async function saveActivityToCloud(userId, action, details) {
+    if (!window.dbClient) return;
+    try {
+        const result = await window.dbClient.from('activity_log').insert({
+            id: Date.now(),
+            username: String(userId),
+            action: action,
+            details: details || ''
+        });
+        if (!result.error) {
+            console.log('✅ فعالیت ذخیره شد');
+        }
+    } catch(e) {
+        console.error('خطا در ذخیره فعالیت:', e);
+    }
+}
+    // ============ همگام‌سازی معماها ============
+async function loadPuzzlesFromCloud() {
+    if (!window.dbClient || !navigator.onLine) return;
+    try {
+        const { data, error } = await window.dbClient.from('puzzles').select('*');
+        if (error || !data) return;
+        if (data.length > 0) {
+            puzzles = data.map(p => ({
+                id: p.id,
+                question: p.question,
+                answer: p.answer,
+                points: p.points || 10
+            }));
+            console.log('✅ ' + data.length + ' معما از سرور بارگذاری شد');
+        }
+        saveToLocal();
+    } catch(e) {
+        console.error('خطا در بارگذاری معماها:', e);
+    }
+}
+
+async function savePuzzleToCloud(puzzle) {
+    if (!window.dbClient) return;
+    try {
+        await window.dbClient.from('puzzles').upsert({
+            id: puzzle.id || Date.now(),
+            question: puzzle.question,
+            answer: puzzle.answer,
+            points: puzzle.points || 10
+        });
+    } catch(e) { console.error(e); }
 }
     init();
 
