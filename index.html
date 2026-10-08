@@ -190,11 +190,14 @@ try {
     
 // ============ توابع همگام‌سازی ============
 
-// ذخیره یک کاربر در Supabase
-async function cloudSaveUser(user) {
-    if (!window.dbClient) return;
+// ذخیره یک کاربر در Supabas
+    async function cloudSaveUser(user) {
+    if (!window.dbClient) {
+        showTopBar('❌ dbClient وجود ندارد', '#c0392b');
+        return;
+    }
     try {
-        await window.dbClient.from('profiles').upsert({
+        const { data, error } = await window.dbClient.from('profiles').upsert({
             id: String(user.id),
             username: user.username,
             password: user.password,
@@ -205,10 +208,34 @@ async function cloudSaveUser(user) {
             emoji: user.emoji || '🧑',
             referral_code: user.referralCode || null
         });
-        console.log('✅ کاربر ذخیره شد:', user.username);
+        
+        if (error) {
+            console.error('❌ خطا:', error);
+            showTopBar('❌ خطای ذخیره: ' + error.message + ' | کد: ' + error.code, '#c0392b');
+        } else {
+            console.log('✅ کاربر ذخیره شد:', user.username);
+            showTopBar('✅ کاربر ' + user.username + ' در سرور ذخیره شد', '#14503a');
+        }
     } catch(e) {
-        console.error('❌ خطا در ذخیره کاربر:', e);
+        console.error('❌ خطای غیرمنتظره:', e);
+        showTopBar('❌ خطای غیرمنتظره: ' + e.message, '#c0392b');
     }
+}
+
+// تابع کمکی برای نمایش نوار رنگی
+function showTopBar(msg, color) {
+    const existing = document.getElementById('topBarMsg');
+    if (existing) existing.remove();
+    
+    const div = document.createElement('div');
+    div.id = 'topBarMsg';
+    div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:' + color + ';color:#fff;padding:15px;z-index:99999;text-align:center;font-family:sans-serif;font-size:13px;cursor:pointer;direction:rtl;line-height:1.6;';
+    div.textContent = msg + ' (برای بستن بزن)';
+    div.onclick = () => div.remove();
+    document.body.appendChild(div);
+    
+    // بعد از ۱۰ ثانیه خودکار حذف شود
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 10000);
 }
 
 // ذخیره همه کاربران
