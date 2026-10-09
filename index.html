@@ -502,35 +502,45 @@ function showSolvePuzzles(){
     
     document.querySelectorAll('[data-idx]').forEach(btn=>{
         btn.onclick = ()=>{
-            let idx = parseInt(btn.dataset.idx);
-            let ans = document.getElementById(`a${idx}`).value.trim().toLowerCase();
-            let correct = (puzzles[idx].answer || '').trim().toLowerCase();
-            
-            // نرمال‌سازی اعداد فارسی و عربی به انگلیسی
-            ans = ans.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
-                     .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-            correct = correct.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
-                             .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-            
-            if(ans === correct){
-                // چک کن قبلاً حل نکرده باشه
+            try {
+                let idx = parseInt(btn.dataset.idx);
+                let ans = document.getElementById(`a${idx}`).value.trim().toLowerCase();
+                let correct = (puzzles[idx].answer || '').trim().toLowerCase();
+                
+                ans = ans.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+                         .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+                correct = correct.replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+                                 .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+                
+                if(ans !== correct){
+                    alert('❌ پاسخ نادرست. دوباره تلاش کن.\n(پاسخ شما: ' + ans + ')');
+                    return;
+                }
+                
                 if(solvedPuzzles.some(sp=>sp.userId===currentUser.id && String(sp.puzzleId)===String(puzzles[idx].id))) {
                     alert('قبلاً این معما رو حل کردی');
                     return;
                 }
-                currentUser.score += puzzles[idx].points;
-                let u = users.find(u=>u.id===currentUser.id); 
-                if(u) u.score = currentUser.score;
-                solvedPuzzles.push({ userId:currentUser.id, puzzleId:puzzles[idx].id });
-                saveToLocal();
-                cloudSaveUser(currentUser);
-                addActivityLog(currentUser.id, "حل معما", `معمای "${puzzles[idx].question}" حل شد. +${puzzles[idx].points} امتیاز`);
-                checkAndGrantAchievements(currentUser.id);
+                
+                // ✅ اول پیام موفقیت
                 alert(`✅ صحیح! +${puzzles[idx].points} امتیاز`);
-                showSolvePuzzles(); 
-                updateWelcome();
-            } else {
-                alert('❌ پاسخ نادرست. دوباره تلاش کن.\n(پاسخ شما: ' + ans + ')');
+                
+                // بعد بقیه کارها (هر کدوم جدا با محافظ)
+                try {
+                    currentUser.score = (Number(currentUser.score) || 0) + Number(puzzles[idx].points);
+                    let u = users.find(u=>u.id===currentUser.id);
+                    if(u) u.score = currentUser.score;
+                    solvedPuzzles.push({ userId:currentUser.id, puzzleId:puzzles[idx].id });
+                    saveToLocal();
+                } catch(e) { alert('❌ خطای ۱ (ذخیره محلی): ' + e.message); }
+                
+                try { cloudSaveUser(currentUser); } catch(e) { alert('❌ خطای ۲ (سرور کاربر): ' + e.message); }
+                try { addActivityLog(currentUser.id, "حل معما", 'حل معما: +' + puzzles[idx].points); } catch(e) { alert('❌ خطای ۳ (فعالیت): ' + e.message); }
+                try { checkAndGrantAchievements(currentUser.id); } catch(e) { alert('❌ خطای ۴ (دستاورد): ' + e.message); }
+                
+                try { showSolvePuzzles(); updateWelcome(); } catch(e) { alert('❌ خطای ۵ (رفرش): ' + e.message); }
+            } catch(globalErr) {
+                alert('❌ خطای کلی: ' + globalErr.message);
             }
         };
     });
