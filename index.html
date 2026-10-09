@@ -1226,6 +1226,25 @@ async function savePuzzleToCloud(puzzle) {
         });
     } catch(e) { console.error(e); }
 }
+    async function cloudSaveUser(user) {
+    if (!window.dbClient) return;
+    try {
+        await window.dbClient.from('profiles').upsert({
+            id: String(user.id),
+            username: user.username,
+            password: user.password,
+            role: user.role,
+            full_name: user.fullName,
+            score: (user.score === Infinity || user.score === null) ? 999999 : Number(user.score) || 0,
+            "group": user.group || null,
+            emoji: user.emoji || 'user',
+            referral_code: user.referralCode || null
+        });
+        console.log('✅ کاربر ذخیره شد:', user.username);
+    } catch(e) {
+        console.error('❌ خطا در ذخیره کاربر:', e);
+    }
+    }
     init();
 
 // بعد از لود شدن صفحه، اتصال رو تست کن
