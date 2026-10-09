@@ -1142,17 +1142,47 @@ async function loadPuzzlesFromCloud() {
     if (!window.dbClient || !navigator.onLine) return;
     try {
         const { data, error } = await window.dbClient.from('puzzles').select('*');
-        if (error || !data) return;
-        if (data.length > 0) {
-            puzzles = data.map(p => ({
-                id: p.id,
-                question: p.question,
-                answer: p.answer,
-                points: p.points || 10
-            }));
-            console.log('✅ ' + data.length + ' معما از سرور بارگذاری شد');
+        if (error) return;
+        
+        // معماهای پیش‌فرض کانون
+        const defaultPuzzles = [
+            { id: 1, question:"اولین سوره نازل شده بر پیامبر اکرم ص چه بود؟", answer:"علق", points:10 },
+            { id: 2, question:"قرآن کریم چند سوره دارد؟", answer:"۱۱۴", points:5 },
+            { id: 3, question:"اولین نقطه ای از زمین که از آب بیرون آمد چه نام داشت؟", answer:"خانه کعبه", points:10 },
+            { id: 4, question:"کدام سوره قرآن کریم معروف به عروس قرآن است؟", answer:"سوره الرحمن", points:5 },
+            { id: 5, question:"اولین ویژگی عباد الرحمن چیست؟", answer:"با فروتنی بر زمین راه می روند", points:5 }
+        ];
+        
+        // اگه puzzles محلی خالیه، پیش‌فرض‌ها رو بریز
+        if (!puzzles || puzzles.length === 0) {
+            puzzles = [...defaultPuzzles];
         }
+        
+        // اگه سرور خالیه، پیش‌فرض‌ها رو به سرور هم بفرست
+        if (!data || data.length === 0) {
+            for (let dp of defaultPuzzles) {
+                await window.dbClient.from('puzzles').upsert(dp);
+            }
+            saveToLocal();
+            console.log('✅ معماهای پیش‌فرض به سرور ارسال شدند');
+            return;
+        }
+        
+        // ادغام معماهای سرور با محلی (بدون حذف قبلی‌ها)
+        for (let cp of data) {
+            let exists = puzzles.some(p => p.question === cp.question);
+            if (!exists) {
+                puzzles.push({
+                    id: cp.id,
+                    question: cp.question,
+                    answer: cp.answer,
+                    points: cp.points || 10
+                });
+            }
+        }
+        
         saveToLocal();
+        console.log('✅ معماها ادغام شدند: ' + puzzles.length);
     } catch(e) {
         console.error('خطا در بارگذاری معماها:', e);
     }
