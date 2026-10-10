@@ -745,35 +745,43 @@ function manageQuizzes(){
 }
 function addQuestionToQuiz(qid){ let quiz=quizzes.find(q=>q.id===qid); if(!quiz) return; let text=prompt('متن سوال:'); if(!text) return; let type=confirm('چند گزینه‌ای؟')?'choice':'essay'; let options=[], answer=''; if(type==='choice'){ let opts=prompt('گزینه‌ها با ویرگول:'); options=opts?opts.split(',').map(s=>s.trim()):[]; answer=prompt('پاسخ صحیح:'); } else answer=prompt('پاسخ تشریحی:'); if(!answer) return; let points=parseInt(prompt('امتیاز:'))||10; quiz.questions.push({ text, type, options, answer, points }); saveToLocal(); manageQuizzes(); }
 function takeQuiz(){
-    let myQuizzes = quizzes.filter(q => {
-        let allowed = q.allowedUsers || [];
-        // اگه خالی بود: فقط مدیر و جانشین
-        if(allowed.length === 0) {
-            return currentUser.role === 'admin' || currentUser.role === 'deputy';
-        }
-        // اگه پر بود: فقط کاربرهای لیست
-        return allowed.includes(currentUser.id);
-    });
-    
-    if(myQuizzes.length === 0){
-        alert('هیچ آزمونی برای شما تعریف نشده است');
-        return;
-    }
-    
-    let html = `<div class="card"><h3>📝 شرکت در آزمون</h3>
-        <select id="qsel">${myQuizzes.map(q => `<option value="${q.id}">${q.title}</option>`).join('')}</select>
-        <button id="startQuizBtn" class="btn-success">شروع</button>
-        <div id="quizpanel"></div></div>`;
-    document.getElementById('content-area').innerHTML = html;
-    
-    document.getElementById('startQuizBtn').onclick = () => {
-        let qid = parseInt(document.getElementById('qsel').value);
-        let quiz = quizzes.find(q => q.id === qid);
-        if(!quiz) return;
-        if(quiz.questions.length === 0) return alert('این آزمون هنوز سوالی ندارد');
+    try {
+        // اگه کاربر ادمین یا جانشین باشه همه آزمون‌ها رو می‌بینه
+        let isAdmin = (currentUser.role === 'admin' || currentUser.role === 'deputy');
         
-        startQuizSession(quiz);
-    };
+        let myQuizzes = quizzes.filter(q => {
+            let allowed = q.allowedUsers || [];
+            if (isAdmin) return true;
+            if (allowed.length === 0) return false;
+            return allowed.includes(currentUser.id);
+        });
+        
+        if(myQuizzes.length === 0){
+            alert('هیچ آزمونی برای شما تعریف نشده است');
+            return;
+        }
+        
+        let options = myQuizzes.map(q => `<option value="${q.id}">${q.title} (${q.questions.length} سوال)</option>`).join('');
+        
+        let html = `<div class="card">
+            <h3>📝 شرکت در آزمون</h3>
+            <select id="qsel">${options}</select>
+            <button id="startQuizBtn" class="btn-success">شروع آزمون</button>
+            <div id="quizpanel"></div>
+        </div>`;
+        document.getElementById('content-area').innerHTML = html;
+        
+        document.getElementById('startQuizBtn').onclick = function() {
+            let qid = parseInt(document.getElementById('qsel').value);
+            let quiz = quizzes.find(q => q.id === qid);
+            if(!quiz) { alert('آزمون پیدا نشد'); return; }
+            if(quiz.questions.length === 0) { alert('این آزمون هنوز سوالی ندارد'); return; }
+            startQuizSession(quiz);
+        };
+    } catch(err) {
+        alert('❌ خطا در باز کردن آزمون: ' + err.message);
+        console.error(err);
+    }
 }
 
 function startQuizSession(quiz){
