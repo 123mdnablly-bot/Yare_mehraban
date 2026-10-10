@@ -632,6 +632,7 @@ function manageQuizAccess(quiz){
         quiz.allowedUsers = selected;
         saveToLocal();
         alert('✅ دسترسی ذخیره شد: ' + selected.length + ' کاربر');
+        saveQuizToCloud(quiz);
         manageQuizzes();
     };
     
@@ -657,6 +658,7 @@ function manageQuizzes(){
             let newQuiz = { id: Date.now(), title, questions: [], allowedUsers: [] };
             quizzes.push(newQuiz);
             saveToLocal();
+            saveQuizToCloud(newQuiz);
             manageQuizzes();
         }
     };
@@ -818,12 +820,16 @@ function startQuizSession(quiz){
             }
             if(userAns.trim().toLowerCase() === q.answer.toLowerCase()) total += q.points;
         }
-        quizResults.push({
-            userId: currentUser.id,
-            quizId: quiz.id,
-            score: total,
-            date: new Date().toLocaleString()
-        });
+        let newResult = {
+    id: Date.now(),
+    userId: currentUser.id,
+    quizId: quiz.id,
+    score: total,
+    date: new Date().toLocaleString()
+};
+quizResults.push(newResult);
+saveToLocal();
+saveQuizResultToCloud(newResult);
         saveToLocal();
         addActivityLog(currentUser.id, "شرکت در آزمون", `آزمون ${quiz.title} با نمره ${total}`);
         checkAndGrantAchievements(currentUser.id);
@@ -920,6 +926,7 @@ function importQuizFromJSON(){
                 saveToLocal();
                 alert('✅ ' + normalized.length + ' سوال وارد شد');
                 manageQuizzes();
+                saveQuizToCloud(quiz);
             } catch(err){
                 alert('❌ خطا در خواندن فایل: ' + err.message);
             }
@@ -1139,6 +1146,8 @@ function init(){
     await loadAttendanceFromCloud();
     await loadActivityFromCloud();
     await loadPuzzlesFromCloud();
+    await loadQuizzesFromCloud();
+    await loadQuizResultsFromCloud();
     }
     
     errorEl.innerText = '';
@@ -1597,6 +1606,80 @@ async function savePuzzleToCloud(puzzle) {
         console.error('❌ خطا در ذخیره کاربر:', e);
     }
     }
+    // ============ همگام‌سازی آزمون‌ها ============
+async function loadQuizzesFromCloud() {
+    if (!window.dbClient || !navigator.onLine) return;
+    try {
+        const { data, error } = await window.dbClient.from('quizzes').select('*');
+        if (error || !data) return;
+        
+        for (let cq of data) {
+            let local = quizzes.find(q => String(q.id) === String(cq.id));
+            if (local) {
+                local.title = cq.title;
+                local.questions = cq.questions || [];
+                local.allowedUsers = cq.allowed_users || [];
+            } else {
+                quizzes.push({
+                    id: parseInt(cq.id),
+                    title: cq.title,
+                    questions: cq.questions || [],
+                    allowedUsers: cq.allowed_users || []
+                });
+            }
+        }
+        saveToLocal();
+        console.log('✅ ' + data.length + ' آزمون از سرور بارگذاری شد');
+    } catch(e) { console.error(e); }
+}
+
+async function saveQuizToCloud(quiz) {
+    if (!window.dbClient) return;
+    try {
+        await window.dbClient.from('quizzes').upsert({
+            id: quiz.id,
+            title: quiz.title,
+            questions: quiz.questions || [],
+            allowed_users: quiz.allowedUsers || []
+        });
+    } catch(e) { console.error(e); }
+}
+
+// ============ همگام‌سازی نمرات آزمون ============
+async function loadQuizResultsFromCloud() {
+    if (!window.dbClient || !navigator.onLine) return;
+    try {
+        const { data, error } = await window.dbClient.from('quiz_results').select('*');
+        if (error || !data) return;
+        
+        for (let cr of data) {
+            if (!quizResults.some(r => String(r.id) === String(cr.id))) {
+                quizResults.push({
+                    id: cr.id,
+                    userId: parseInt(cr.user_id) || cr.user_id,
+                    quizId: parseInt(cr.quiz_id) || cr.quiz_id,
+                    score: cr.score,
+                    date: cr.date
+                });
+            }
+        }
+        saveToLocal();
+        console.log('✅ ' + data.length + ' نمره از سرور بارگذاری شد');
+    } catch(e) { console.error(e); }
+}
+
+async function saveQuizResultToCloud(result) {
+    if (!window.dbClient) return;
+    try {
+        await window.dbClient.from('quiz_results').upsert({
+            id: result.id || Date.now(),
+            user_id: String(result.userId),
+            quiz_id: String(result.quizId),
+            score: result.score,
+            date: result.date
+        });
+    } catch(e) { console.error(e); }
+}
     init();
 
 // بعد از لود شدن صفحه، اتصال رو تست کن
