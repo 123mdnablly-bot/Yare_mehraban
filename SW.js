@@ -1,80 +1,66 @@
-// Service Worker - یار مهربان
+// ============ Service Worker یار مهربان ============
 const CACHE_NAME = 'yare-mehraban-v1';
-const ASSETS_TO_CACHE = [
+const urlsToCache = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icon-192.png',
+  './favicon-32x32.png'
 ];
 
 // نصب: کش کردن فایل‌های اصلی
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
+  console.log('✅ Service Worker نصب شد');
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache).catch(err => console.log('خطا در کش:', err)))
   );
+  self.skipWaiting();
 });
 
-// فعال‌سازی: پاک کردن کش‌های قدیمی
+// فعال‌سازی: پاک کردن کش قدیمی
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
+  console.log('✅ Service Worker فعال شد');
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then(keys => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  self.clients.claim();
 });
 
-// واکشی: از کش پاسخ بده، اگر نبود از شبکه
+// دریافت: استراتژی Network First (اول شبکه، بعد کش)
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  
+  // برای درخواست‌های Supabase، مستقیم به شبکه برو
+  if (event.request.url.includes('supabase.co')) {
+    return;
+  }
+  
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        // ذخیره‌ی پاسخ‌های جدید در کش
-        if (response && response.status === 200 && response.type === 'basic') {
+    fetch(event.request)
+      .then(response => {
+        // کش کردن نسخه جدید
+        if (response && response.status === 200) {
           const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
+          caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseClone);
           });
         }
         return response;
-      }).catch(() => {
-        // آفلاین: صفحه‌ی اصلی را برگردان
-        return caches.match('./index.html');
-      });
-    })
-  );
-});
-
-// اعلان‌های Push
-self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : { title: 'یار مهربان', body: 'پیام جدید' };
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'یار مهربان', {
-      body: data.body || '',
-      icon: 'icon-192.png',
-      badge: 'icon-192.png',
-      dir: 'rtl',
-      lang: 'fa',
-      vibrate: [200, 100, 200]
-    })
-  );
-});
-
-// کلیک روی اعلان
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes('index.html') && 'focus' in client) return client.focus();
-      }
-      if (clients.openWindow) return clients.openWindow('./index.html');
-    })
+      })
+      .catch(() => {
+        // اگه شبکه نبود، از کش بده
+        return caches.match(event.request).then(cached => {
+          if (cached) return cached;
+          // اگه کش هم نبود، صفحه اصلی رو بده
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });
