@@ -572,10 +572,362 @@ function importChatbotJSON(){ let inp=document.createElement('input'); inp.type=
 function showChat(){ let area=document.getElementById('content-area'); area.innerHTML=`<div class="card"><div class="flex"><button id="importChatBtn" class="btn-purple">📂 بارگذاری JSON چت‌بات</button></div><div id="chatlog" style="height:300px; overflow-y:auto; border:1px solid #ccc; padding:10px; border-radius:20px; margin-bottom:10px;"></div><div class="flex"><input id="chatinput" placeholder="سوال..."><button id="chatsend" class="btn-success">ارسال</button></div></div>`; let log=document.getElementById('chatlog'); let add=(txt,isUser)=>{ let d=document.createElement('div'); d.style.textAlign=isUser?'left':'right'; d.style.margin='8px'; d.style.background=isUser?'#e2f0ff':'#f0f0f0'; d.style.padding='8px'; d.style.borderRadius='16px'; d.innerHTML=isUser?`<b>شما:</b> ${txt}`:`<b>یار مهربان:</b> ${txt}`; log.appendChild(d); log.scrollTop=log.scrollHeight; }; let input=document.getElementById('chatinput'); let send=()=>{ let msg=input.value.trim(); if(!msg) return; add(msg,true); add(chatReply(msg),false); input.value=''; }; document.getElementById('chatsend').onclick=send; document.getElementById('importChatBtn').onclick=()=>importChatbotJSON(); input.onkeypress=e=>{ if(e.key==='Enter') send(); }; add('سلام! من یار مهربان هستم. می‌توانید سوال بپرسید یا با «یاد بگیر کلید = مقدار» به من آموزش دهید.',false); }
 
 // ---------------------------- آزمون‌ها ----------------------------
-function manageQuizzes(){ if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return; let html=`<div class="card"><h3>📝 مدیریت آزمون</h3><div class="flex"><label>⏱️ زمان (دقیقه):</label><input type="number" id="examTimeLimit" value="${examSettings.timeLimit}" style="width:80px;"><button id="saveTimeBtn" class="btn-success">ذخیره</button></div><button id="newQuizBtn" class="btn-success">➕ آزمون جدید</button><div id="qlist"></div></div>`; document.getElementById('content-area').innerHTML=html; document.getElementById('saveTimeBtn').onclick=()=>{ let t=parseInt(document.getElementById('examTimeLimit').value); if(t>0){ examSettings.timeLimit=t; saveToLocal(); alert('ذخیره شد'); } }; document.getElementById('newQuizBtn').onclick=()=>{ let title=prompt('عنوان آزمون:'); if(title){ quizzes.push({ id:Date.now(), title, questions:[] }); saveToLocal(); manageQuizzes(); } }; let listDiv=document.getElementById('qlist'); listDiv.innerHTML=''; quizzes.forEach(q=>{ let div=document.createElement('div'); div.className='card'; div.innerHTML=`<b>📌 ${q.title}</b> <button class="btn-warning" data-qid="${q.id}">➕ سوال</button> <button class="btn-danger" data-del="${q.id}">حذف</button><div id="qs-${q.id}"></div>`; listDiv.appendChild(div); let qsDiv=div.querySelector(`#qs-${q.id}`); q.questions.forEach((qs,idx)=>{ let qsd=document.createElement('div'); qsd.className='card'; qsd.innerHTML=`<b>${idx+1}. ${qs.text}</b> (${qs.type})<br>پاسخ: ${qs.answer}<br><button class="btn-danger" data-qid="${q.id}" data-qidx="${idx}">حذف سوال</button>`; qsDiv.appendChild(qsd); }); div.querySelector('[data-qid]').onclick=()=>addQuestionToQuiz(q.id); div.querySelector('[data-del]').onclick=()=>{ quizzes=quizzes.filter(qq=>qq.id!==q.id); saveToLocal(); manageQuizzes(); }; }); }
+function manageQuizAccess(quiz){
+    if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('دسترسی غیرمجاز');
+    
+    let allowed = quiz.allowedUsers || [];
+    let html = `<div class="card">
+        <h3>🔐 دسترسی آزمون: ${quiz.title}</h3>
+        <p style="font-size:13px; color:#666;">کاربرهایی که می‌توانند این آزمون را ببینند و شرکت کنند:</p>
+        <div class="flex" style="margin-bottom:10px;">
+            <button id="selectAll" class="btn-success">✅ انتخاب همه</button>
+            <button id="selectNone" class="btn-danger">❌ حذف همه</button>
+            <button id="selectTeens" class="btn-warning">🧒 فقط نوجوان‌ها</button>
+        </div>
+        <div id="userList"></div>
+        <div class="flex" style="margin-top:15px;">
+            <button id="saveAccess" class="btn-success">💾 ذخیره</button>
+            <button id="cancelAccess" class="btn">انصراف</button>
+        </div>
+    </div>`;
+    document.getElementById('content-area').innerHTML = html;
+    
+    let userList = document.getElementById('userList');
+    
+    function renderUsers(){
+        userList.innerHTML = '';
+        // فقط کاربران teen و governor رو نشون بده (چون آزمون‌ها معمولاً برای اون‌هاست)
+        let candidates = users.filter(u => u.role !== 'admin');
+        candidates.forEach(u => {
+            let checked = allowed.includes(u.id);
+            let roleMap = {teen:'نوجوان', parent:'والد', deputy:'جانشین', governor:'فرماندار', prime_minister:'نخست‌وزیر', interior_minister:'وزیر کشور', support_minister:'وزیر پشتیبانی', supreme_advisor:'مشاور اعظم'};
+            userList.innerHTML += `
+                <label style="display:flex; align-items:center; padding:8px; background:#f8fafc; border-radius:10px; margin:5px 0; cursor:pointer;">
+                    <input type="checkbox" data-uid="${u.id}" ${checked?'checked':''} style="width:20px; height:20px; margin-left:10px;">
+                    <span style="flex:1;">${u.fullName} <small style="color:#888;">(${roleMap[u.role]||u.role})</small></span>
+                </label>`;
+        });
+    }
+    
+    renderUsers();
+    
+    document.getElementById('selectAll').onclick = () => {
+        allowed = users.filter(u => u.role !== 'admin').map(u => u.id);
+        renderUsers();
+    };
+    document.getElementById('selectNone').onclick = () => {
+        allowed = [];
+        renderUsers();
+    };
+    document.getElementById('selectTeens').onclick = () => {
+        allowed = users.filter(u => u.role === 'teen').map(u => u.id);
+        renderUsers();
+    };
+    
+    document.getElementById('saveAccess').onclick = () => {
+        let selected = [];
+        document.querySelectorAll('[data-uid]').forEach(cb => {
+            if(cb.checked) selected.push(parseInt(cb.dataset.uid));
+        });
+        quiz.allowedUsers = selected;
+        saveToLocal();
+        alert('✅ دسترسی ذخیره شد: ' + selected.length + ' کاربر');
+        manageQuizzes();
+    };
+    
+    document.getElementById('cancelAccess').onclick = () => manageQuizzes();
+}
+function manageQuizzes(){
+    if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return;
+    let html = `<div class="card"><h3>📝 مدیریت آزمون</h3>
+        <div class="flex"><label>⏱️ زمان (دقیقه):</label><input type="number" id="examTimeLimit" value="${examSettings.timeLimit}" style="width:80px;"><button id="saveTimeBtn" class="btn-success">ذخیره زمان</button></div>
+        <button id="newQuizBtn" class="btn-success">➕ آزمون جدید</button>
+        <button id="importQuizBtn" class="btn-warning">📂 واردات آزمون (JSON)</button>
+        <div id="qlist"></div></div>`;
+    document.getElementById('content-area').innerHTML = html;
+    
+    document.getElementById('saveTimeBtn').onclick = () => {
+        let t = parseInt(document.getElementById('examTimeLimit').value);
+        if(t > 0){ examSettings.timeLimit = t; saveToLocal(); alert('ذخیره شد'); }
+    };
+    
+    document.getElementById('newQuizBtn').onclick = () => {
+        let title = prompt('عنوان آزمون:');
+        if(title){
+            let newQuiz = { id: Date.now(), title, questions: [], allowedUsers: [] };
+            quizzes.push(newQuiz);
+            saveToLocal();
+            manageQuizzes();
+        }
+    };
+    
+    document.getElementById('importQuizBtn').onclick = () => importQuizFromJSON();
+    
+    let listDiv = document.getElementById('qlist');
+    listDiv.innerHTML = '';
+    
+    if(quizzes.length === 0){
+        listDiv.innerHTML = '<p style="text-align:center; color:#888;">هنوز آزمونی نساختی</p>';
+        return;
+    }
+    
+    quizzes.forEach(q => {
+        let allowed = q.allowedUsers || [];
+        let allowedCount = allowed.length;
+        let allowedText = allowedCount === 0 ? 'هیچ‌کس (فقط مدیر)' : allowedCount + ' کاربر';
+        
+        let div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+            <b>📌 ${q.title}</b>
+            <div style="font-size:12px; color:#666; margin:5px 0;">👥 دسترسی: ${allowedText}</div>
+            <div class="flex" style="margin-top:8px;">
+                <button class="btn-warning" data-qid="${q.id}" data-action="add-question">➕ سوال</button>
+                <button class="btn-purple" data-qid="${q.id}" data-action="access">🔐 تعیین دسترسی</button>
+                <button class="btn-info" data-qid="${q.id}" data-action="view-results">📊 نمرات</button>
+                <button class="btn-danger" data-qid="${q.id}" data-action="delete">🗑 حذف</button>
+            </div>
+            <div id="qs-${q.id}" style="margin-top:10px;"></div>
+        `;
+        listDiv.appendChild(div);
+        
+        // نمایش سوال‌ها
+        let qsDiv = div.querySelector(`#qs-${q.id}`);
+        if(q.questions.length === 0){
+            qsDiv.innerHTML = '<div style="color:#999; font-size:12px;">هیچ سوالی نیست</div>';
+        } else {
+            q.questions.forEach((qs, idx) => {
+                let qsd = document.createElement('div');
+                qsd.style.cssText = 'background:#f0f4f8; border-radius:10px; padding:8px; margin:5px 0; font-size:13px;';
+                qsd.innerHTML = `<b>${idx+1}.</b> ${qs.text} <span style="color:#666;">(${qs.points} امتیاز)</span>
+                    <button class="btn-danger" style="padding:3px 8px; font-size:11px;" data-qid="${q.id}" data-qidx="${idx}">✖</button>`;
+                qsDiv.appendChild(qsd);
+            });
+        }
+    });
+    
+    // لیسنرهای دکمه‌ها
+    document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.onclick = () => {
+            let qid = parseInt(btn.dataset.qid);
+            let action = btn.dataset.action;
+            let quiz = quizzes.find(q => q.id === qid);
+            if(!quiz) return;
+            
+            if(action === 'add-question') addQuestionToQuiz(qid);
+            else if(action === 'access') manageQuizAccess(quiz);
+            else if(action === 'view-results') viewQuizResultsForAdmin(quiz);
+            else if(action === 'delete') {
+                if(confirm('آزمون «' + quiz.title + '» حذف شود؟')){
+                    quizzes = quizzes.filter(q => q.id !== qid);
+                    saveToLocal();
+                    manageQuizzes();
+                }
+            }
+        };
+    });
+    
+    // حذف سوال
+    document.querySelectorAll('[data-qidx]').forEach(btn => {
+        btn.onclick = () => {
+            let qid = parseInt(btn.dataset.qid);
+            let qidx = parseInt(btn.dataset.qidx);
+            let quiz = quizzes.find(q => q.id === qid);
+            if(quiz && confirm('این سوال حذف شود؟')){
+                quiz.questions.splice(qidx, 1);
+                saveToLocal();
+                manageQuizzes();
+            }
+        };
+    });
+}
 function addQuestionToQuiz(qid){ let quiz=quizzes.find(q=>q.id===qid); if(!quiz) return; let text=prompt('متن سوال:'); if(!text) return; let type=confirm('چند گزینه‌ای؟')?'choice':'essay'; let options=[], answer=''; if(type==='choice'){ let opts=prompt('گزینه‌ها با ویرگول:'); options=opts?opts.split(',').map(s=>s.trim()):[]; answer=prompt('پاسخ صحیح:'); } else answer=prompt('پاسخ تشریحی:'); if(!answer) return; let points=parseInt(prompt('امتیاز:'))||10; quiz.questions.push({ text, type, options, answer, points }); saveToLocal(); manageQuizzes(); }
-function takeQuiz(){ const allowedRoles = ['admin', 'deputy', 'prime_minister', 'interior_minister', 'support_minister', 'supreme_advisor']; if(!allowedRoles.includes(currentUser.role)){ alert("این آزمون فقط برای مدیر، جانشین و وزرا قابل دسترسی است."); return; } if(!quizzes.length){ alert('هیچ آزمونی نیست'); return; } let html=`<div class="card"><h3>📝 شرکت در آزمون</h3><select id="qsel">${quizzes.map(q=>`<option value="${q.id}">${q.title}</option>`).join('')}</select><button id="startQuizBtn" class="btn-success">شروع</button><div id="quizpanel"></div></div>`; document.getElementById('content-area').innerHTML=html; document.getElementById('startQuizBtn').onclick=()=>{ let qid=parseInt(document.getElementById('qsel').value); let quiz=quizzes.find(q=>q.id===qid); if(!quiz) return; if(activeQuizTimer) clearInterval(activeQuizTimer); let timeLeft=examSettings.timeLimit*60; let endTime=Date.now()+timeLeft*1000; activeQuizTimer=setInterval(()=>{ let rem=Math.max(0,Math.floor((endTime-Date.now())/1000)); let timerDiv=document.getElementById("quizTimer"); if(timerDiv){ let mins=Math.floor(rem/60), secs=rem%60; timerDiv.innerText=`⏱️ ${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`; if(rem<=0){ clearInterval(activeQuizTimer); alert("زمان تمام شد!"); document.getElementById("quizForm")?.submit(); } } },1000); let form=`<div id="quizTimer" style="background:#e68a2e; color:white; padding:8px; text-align:center;">⏱️ ${examSettings.timeLimit}:00</div><form id="quizForm">`; quiz.questions.forEach((q,i)=>{ form+=`<div class="card"><b>${i+1}. ${q.text}</b><br>`; if(q.type==='choice') q.options.forEach(opt=> form+=`<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label><br>`); else form+=`<textarea name="q${i}" rows="2"></textarea>`; form+=`</div>`; }); form+=`<button type="submit" class="btn-success">پایان</button></form>`; document.getElementById('quizpanel').innerHTML=form; document.getElementById('quizForm').onsubmit=(e)=>{ e.preventDefault(); if(activeQuizTimer) clearInterval(activeQuizTimer); let total=0; for(let i=0;i<quiz.questions.length;i++){ let q=quiz.questions[i]; let userAns; if(q.type==='choice'){ let sel=document.querySelector(`input[name="q${i}"]:checked`); userAns=sel?sel.value:''; } else userAns=document.querySelector(`textarea[name="q${i}"]`).value; if(userAns.trim().toLowerCase()===q.answer.toLowerCase()) total+=q.points; } quizResults.push({ userId:currentUser.id, quizId:quiz.id, score:total, date:new Date().toLocaleString() }); saveToLocal(); addActivityLog(currentUser.id, "شرکت در آزمون", `آزمون ${quiz.title} با نمره ${total} از ${quiz.questions.reduce((s,q)=>s+q.points,0)}`); checkAndGrantAchievements(currentUser.id); alert(`نمره: ${total} / ${quiz.questions.reduce((s,q)=>s+q.points,0)}`); renderMainMenu(); }; }; }
+function takeQuiz(){
+    let myQuizzes = quizzes.filter(q => {
+        let allowed = q.allowedUsers || [];
+        // اگه خالی بود: فقط مدیر و جانشین
+        if(allowed.length === 0) {
+            return currentUser.role === 'admin' || currentUser.role === 'deputy';
+        }
+        // اگه پر بود: فقط کاربرهای لیست
+        return allowed.includes(currentUser.id);
+    });
+    
+    if(myQuizzes.length === 0){
+        alert('هیچ آزمونی برای شما تعریف نشده است');
+        return;
+    }
+    
+    let html = `<div class="card"><h3>📝 شرکت در آزمون</h3>
+        <select id="qsel">${myQuizzes.map(q => `<option value="${q.id}">${q.title}</option>`).join('')}</select>
+        <button id="startQuizBtn" class="btn-success">شروع</button>
+        <div id="quizpanel"></div></div>`;
+    document.getElementById('content-area').innerHTML = html;
+    
+    document.getElementById('startQuizBtn').onclick = () => {
+        let qid = parseInt(document.getElementById('qsel').value);
+        let quiz = quizzes.find(q => q.id === qid);
+        if(!quiz) return;
+        if(quiz.questions.length === 0) return alert('این آزمون هنوز سوالی ندارد');
+        
+        startQuizSession(quiz);
+    };
+}
+
+function startQuizSession(quiz){
+    if(activeQuizTimer) clearInterval(activeQuizTimer);
+    let timeLeft = examSettings.timeLimit * 60;
+    let endTime = Date.now() + timeLeft * 1000;
+    
+    activeQuizTimer = setInterval(() => {
+        let rem = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+        let timerDiv = document.getElementById("quizTimer");
+        if(timerDiv){
+            let mins = Math.floor(rem / 60), secs = rem % 60;
+            timerDiv.innerText = `⏱️ ${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+            if(rem <= 0){
+                clearInterval(activeQuizTimer);
+                alert("زمان تمام شد!");
+                document.getElementById("quizForm")?.requestSubmit();
+            }
+        }
+    }, 1000);
+    
+    let form = `<div id="quizTimer" style="background:#e68a2e; color:white; padding:8px; text-align:center;">⏱️ ${examSettings.timeLimit}:00</div><form id="quizForm">`;
+    quiz.questions.forEach((q, i) => {
+        form += `<div class="card"><b>${i+1}. ${q.text}</b><br>`;
+        if(q.type === 'choice') q.options.forEach(opt => form += `<label><input type="radio" name="q${i}" value="${opt}"> ${opt}</label><br>`);
+        else form += `<textarea name="q${i}" rows="2"></textarea>`;
+        form += `</div>`;
+    });
+    form += `<button type="submit" class="btn-success">پایان</button></form>`;
+    document.getElementById('quizpanel').innerHTML = form;
+    
+    document.getElementById('quizForm').onsubmit = (e) => {
+        e.preventDefault();
+        if(activeQuizTimer) clearInterval(activeQuizTimer);
+        let total = 0;
+        for(let i = 0; i < quiz.questions.length; i++){
+            let q = quiz.questions[i];
+            let userAns;
+            if(q.type === 'choice'){
+                let sel = document.querySelector(`input[name="q${i}"]:checked`);
+                userAns = sel ? sel.value : '';
+            } else {
+                userAns = document.querySelector(`textarea[name="q${i}"]`).value;
+            }
+            if(userAns.trim().toLowerCase() === q.answer.toLowerCase()) total += q.points;
+        }
+        quizResults.push({
+            userId: currentUser.id,
+            quizId: quiz.id,
+            score: total,
+            date: new Date().toLocaleString()
+        });
+        saveToLocal();
+        addActivityLog(currentUser.id, "شرکت در آزمون", `آزمون ${quiz.title} با نمره ${total}`);
+        checkAndGrantAchievements(currentUser.id);
+        alert(`نمره: ${total} از ${quiz.questions.reduce((s,q)=>s+q.points,0)}`);
+        renderMainMenu();
+    };
+}
 function viewQuizResults(){ let my=quizResults.filter(r=>r.userId===currentUser.id); if(!my.length){ alert('هیچ نتیجه‌ای'); return; } alert(my.map(r=>`${r.date}: ${r.score}`).join('\n')); }
+function viewQuizResultsForAdmin(quiz){
+    if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('دسترسی غیرمجاز');
+    
+    let results = quizResults.filter(r => r.quizId === quiz.id);
+    let totalPoints = quiz.questions.reduce((s, q) => s + q.points, 0);
+    
+    let html = `<div class="card">
+        <h3>📊 نمرات آزمون: ${quiz.title}</h3>
+        <p style="font-size:13px; color:#666;">مجموع امتیاز: ${totalPoints} | شرکت‌کننده: ${results.length} نفر</p>`;
+    
+    if(results.length === 0){
+        html += '<p style="text-align:center; color:#888;">هنوز کسی در این آزمون شرکت نکرده</p>';
+    } else {
+        // مرتب‌سازی بر اساس نمره
+        results.sort((a, b) => b.score - a.score);
+        html += `<table style="width:100%; font-size:13px;">
+            <thead><tr><th>رتبه</th><th>نام</th><th>نمره</th><th>تاریخ</th></tr></thead><tbody>`;
+        results.forEach((r, idx) => {
+            let u = users.find(u => u.id === r.userId);
+            let medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx+1);
+            html += `<tr><td>${medal}</td><td>${u ? u.fullName : '?'}</td><td><b>${r.score}</b> / ${totalPoints}</td><td style="font-size:11px;">${r.date}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+    }
+    
+    html += `<div class="flex" style="margin-top:15px;">
+        <button id="exportResults" class="btn-purple">📤 خروجی CSV</button>
+        <button id="backToQuiz" class="btn">بازگشت</button>
+    </div></div>`;
+    
+    document.getElementById('content-area').innerHTML = html;
+    
+    document.getElementById('exportResults').onclick = () => {
+        let csv = [["رتبه", "نام", "نمره", "از", "تاریخ"]];
+        results.forEach((r, idx) => {
+            let u = users.find(u => u.id === r.userId);
+            csv.push([idx+1, u ? u.fullName : '?', r.score, totalPoints, r.date]);
+        });
+        let csvContent = csv.map(r => r.join(",")).join("\n");
+        let blob = new Blob(["\uFEFF" + csvContent], {type: "text/csv;charset=utf-8;"});
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `results_${quiz.title}_${Date.now()}.csv`;
+        link.click();
+    };
+    
+    document.getElementById('backToQuiz').onclick = () => manageQuizzes();
+}
+function importQuizFromJSON(){
+    let input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.onchange = (e) => {
+        let file = e.target.files[0];
+        if(!file) return;
+        let reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                let data = JSON.parse(ev.target.result);
+                
+                // پشتیبانی از دو فرمت:
+                // ۱. { title, questions: [...] }
+                // ۲. فقط آرایه‌ی سوال‌ها
+                let title, questions;
+                if(Array.isArray(data)){
+                    title = prompt('عنوان آزمون:') || 'آزمون بدون نام';
+                    questions = data;
+                } else {
+                    title = data.title || prompt('عنوان آزمون:') || 'آزمون بدون نام';
+                    questions = data.questions || [];
+                }
+                
+                if(questions.length === 0) return alert('فایل خالی است');
+                
+                // نرمال‌سازی سوال‌ها
+                let normalized = questions.map(q => ({
+                    text: q.text || q.question || q.q || '',
+                    type: q.type || (q.options ? 'choice' : 'essay'),
+                    options: q.options || [],
+                    answer: q.answer || q.correct || '',
+                    points: parseInt(q.points) || 1
+                }));
+                
+                let newQuiz = { id: Date.now(), title, questions: normalized, allowedUsers: [] };
+                quizzes.push(newQuiz);
+                saveToLocal();
+                alert('✅ ' + normalized.length + ' سوال وارد شد');
+                manageQuizzes();
+            } catch(err){
+                alert('❌ خطا در خواندن فایل: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
 
 // ---------------------------- حضور و غیاب، تایید وزرا، ارزیابی ----------------------------
 function showAttendance(){
