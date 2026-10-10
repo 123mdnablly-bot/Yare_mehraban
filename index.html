@@ -43,11 +43,47 @@ if ('serviceWorker' in navigator) {
 let deferredPrompt = null;
 const installBtn = document.getElementById('installBtn');
 
+// ============ دکمه نصب PWA (بهبودیافته) ============
+let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn');
+
 window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  if (installBtn) installBtn.style.display = 'block';
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) {
+        installBtn.style.display = 'flex';
+        installBtn.style.alignItems = 'center';
+        installBtn.style.gap = '8px';
+        installBtn.innerHTML = '📲 نصب اپ روی گوشی';
+    }
 });
+
+if (installBtn) {
+    installBtn.onclick = async () => {
+        if (!deferredPrompt) {
+            alert('برای نصب:\n\n۱. از منوی مرورگر گزینه «نصب برنامه» یا «افزودن به صفحه اصلی» رو بزن\n۲. اگه این گزینه نبود، از مرورگر Chrome استفاده کن');
+            return;
+        }
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('✅ کاربر اپ رو نصب کرد');
+            installBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+    };
+}
+
+// اگه اپ قبلاً نصب شده، دکمه رو پنهان کن
+window.addEventListener('appinstalled', () => {
+    console.log('✅ اپ نصب شد');
+    if (installBtn) installBtn.style.display = 'none';
+});
+
+// تشخیص حالت standalone (نصب‌شده)
+if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (installBtn) installBtn.style.display = 'none';
+}
 
 if (installBtn) {
   installBtn.onclick = async () => {
