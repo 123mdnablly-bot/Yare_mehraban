@@ -1007,7 +1007,7 @@ function showMinisterApproval(){
     let ministers=users.filter(u=>['interior_minister','support_minister','supreme_advisor'].includes(u.role));
     let today=new Date().toISOString().slice(0,10);
     let app=ministerApproval[today]||{};
-    let html=`<h3>✅ تایید وزرا - ${today}</h3><table><thead>运转<th>وزیر</th><th>تایید</th><th>رد</th> </thead><tbody>`;
+    let html=`<h3>✅ تایید وزرا - ${today}</h3><table><thead><th>وزیر</th><th>تایید</th><th>رد</th> </thead><tbody>`;
     ministers.forEach(m=>{ let st=app[m.username]||''; html+=`<tr><td>${m.fullName}</td><td><button class="btn-success" data-u="${m.username}" data-st="approved" ${st==='approved'?'style="background:#1f5068"':''}>✅</button></td><td><button class="btn-danger" data-u="${m.username}" data-st="rejected" ${st==='rejected'?'style="background:#a33"':''}>❌</button></td>`; });
     html+=`</tbody></table><button id="saveApp" class="btn-success">💾 ذخیره</button>`;
     document.getElementById('content-area').innerHTML=html;
