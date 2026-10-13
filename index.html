@@ -26,6 +26,14 @@
     <style>
         *{box-sizing:border-box;font-family:system-ui,'Segoe UI',Tahoma,'Vazir',sans-serif;}
         <script>
+        window.onerror = function(msg, url, line, col, error) {
+    var errorMsg = '❌ خطای JS:\n' + msg + '\n\nخط: ' + line + '\nستون: ' + col;
+    if (error && error.stack) {
+        errorMsg += '\n\nمکان دقیق: ' + error.stack.split('\n')[1];
+    }
+    alert(errorMsg);
+    return false;
+};
 // ============================================================
 // ثبت Service Worker
 // ============================================================
@@ -38,11 +46,6 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============================================================
-// دکمه‌ی نصب PWA
-// ============================================================
-let deferredPrompt = null;
-const installBtn = document.getElementById('installBtn');
-
 // ============ دکمه نصب PWA (بهبودیافته) ============
 let deferredPrompt = null;
 const installBtn = document.getElementById('installBtn');
