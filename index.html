@@ -1074,7 +1074,7 @@ function showAttendance(){
     if(targetUsers.length === 0){ alert("هیچ کاربری برای ثبت حضور وجود ندارد"); return; }
     let today = new Date().toISOString().slice(0,10);
     let att = attendance[today] || {};
-    let html = `<h3>📋 حضور و غیاب - ${today}</h3><table style="width:100%"><thead><tr><th>نام کامل</th><th>گروه</th><th>وضعیت</th></tr></thead><tbody>`;
+    let html = `<button class="back-btn" style="margin-bottom:15px;" onclick="backToRoleMenu()">⬅️ بازگشت</button><h3>📋 حضور و غیاب - ${today}</h3>...
     targetUsers.forEach(u => {
         let st = att[u.username] || 'absent';
         html += `<tr><td>${u.fullName}</td><td>${u.group||'—'} <td><button class="btn-success" data-u="${u.username}" data-st="present" ${st === 'present' ? 'style="background:#1f5068"' : ''}>حاضر</button><button class="btn-danger" data-u="${u.username}" data-st="absent" ${st === 'absent' ? 'style="background:#a33"' : ''}>غایب</button></td> `;
@@ -1092,7 +1092,7 @@ function showMinisterApproval(){
     let ministers=users.filter(u=>['interior_minister','support_minister','supreme_advisor'].includes(u.role));
     let today=new Date().toISOString().slice(0,10);
     let app=ministerApproval[today]||{};
-    let html=`<h3>✅ تایید وزرا - ${today}</h3><table><thead><th>وزیر</th><th>تایید</th><th>رد</th> </thead><tbody>`;
+    let html=`<button class="back-btn" style="margin-bottom:15px;" onclick="backToRoleMenu()">⬅️ بازگشت</button><h3>✅ تایید وزرا - ${today}</h3>...
     ministers.forEach(m=>{ let st=app[m.username]||''; html+=`<tr><td>${m.fullName}</td><td><button class="btn-success" data-u="${m.username}" data-st="approved" ${st==='approved'?'style="background:#1f5068"':''}>✅</button></td><td><button class="btn-danger" data-u="${m.username}" data-st="rejected" ${st==='rejected'?'style="background:#a33"':''}>❌</button></td>`; });
     html+=`</tbody></table><button id="saveApp" class="btn-success">💾 ذخیره</button>`;
     document.getElementById('content-area').innerHTML=html;
@@ -1106,7 +1106,7 @@ function showAdvisorEvaluation(){
     let all=users.filter(u=>u.role!=='admin' && u.role!=='supreme_advisor');
     let today=new Date().toISOString().slice(0,10);
     let evalData=advisorEvaluation[today]||{};
-    let html=`<h3>📝 ارزیابی روزانه - ${today}</h3><table><thead>运转<th>نام</th><th>گروه</th><th>تایید</th><th>رد</th><th>توضیح</th> </thead><tbody>`;
+    let html=`<button class="back-btn" style="margin-bottom:15px;" onclick="backToRoleMenu()">⬅️ بازگشت</button><h3>📝 ارزیابی روزانه - ${today}</h3>...
     all.forEach(u=>{ let item=evalData[u.username]||{status:'',note:''}; html+=`<tr><td>${u.fullName}</td><td>${u.group||'—'}</td><td><button class="btn-success" data-u="${u.username}" data-st="approved" ${item.status==='approved'?'style="background:#1f5068"':''}>✅</button></td><td><button class="btn-danger" data-u="${u.username}" data-st="rejected" ${item.status==='rejected'?'style="background:#a33"':''}>❌</button></td><td><input type="text" id="note-${u.username}" value="${item.note.replace(/"/g,'&quot;')}" placeholder="توضیح"></td>`; });
     html+=`</tbody></tr><button id="saveEval" class="btn-success">💾 ذخیره</button>`;
     document.getElementById('content-area').innerHTML=html;
@@ -1142,7 +1142,7 @@ function showSendMessage(){
     }; 
 }
 function showMessages(){ let relevant=messages.filter(m=>m.fromId===currentUser.id || m.toId===currentUser.id); if(!relevant.length){ alert('هیچ پیامی نیست'); return; } let html=`<h3>📬 پیام‌ها</h3>`; relevant.forEach(m=>{ let sender=users.find(u=>u.id===m.fromId); let receiver=users.find(u=>u.id===m.toId); let isMine=m.toId===currentUser.id; html+=`<div class="card"><div>${isMine?`از: ${sender.fullName}`:`به: ${receiver.fullName}`}</div><div>${m.date}</div><div>${m.text}</div></div>`; }); document.getElementById('content-area').innerHTML=html; }
-function showParentPanel(){ if(currentUser.role!=='parent') return alert('دسترسی محدود به والدین'); let children=users.filter(u=>currentUser.childrenIds?.includes(u.id)); if(!children.length){ alert('هیچ فرزندی برای شما ثبت نشده است'); return; } let html=`<h3>👪 وضعیت فرزندان</h3>`; children.forEach(child=>{ let childResults=quizResults.filter(r=>r.userId===child.id); let attList=Object.entries(attendance).map(([d,obj])=>({date:d,status:obj[child.username]})).filter(a=>a.status); html+=`<div class="card"><h4>${child.fullName}</h4><p>⭐ امتیاز: ${child.score===Infinity?'∞':child.score}</p><p>📝 نمرات آزمون: ${childResults.map(r=>r.score).join(', ')||'هیچ'}</p><p>📋 حضور: ${attList.map(a=>`${a.date}: ${a.status==='present'?'حاضر':'غایب'}`).join(' , ')||'ثبتی نیست'}</p><textarea id="fb_${child.id}" rows="2" placeholder="بازخورد خود را برای مربیان بنویسید..."></textarea><button class="btn-success" data-child="${child.id}">ارسال بازخورد</button><hr><h5>پاسخ مربیان:</h5><div id="replies_${child.id}">`; let replies=parentFeedbacks.filter(fb=>fb.childId===child.id && fb.reply); if(replies.length) replies.forEach(r=>html+=`<div><strong>پاسخ:</strong> ${r.reply} (${r.replyDate})</div>`); else html+=`<div>هیچ پاسخی ثبت نشده است.</div>`; html+=`</div></div>`; }); document.getElementById('content-area').innerHTML=html; document.querySelectorAll('[data-child]').forEach(btn=>{ btn.onclick=()=>{ let childId=parseInt(btn.dataset.child); let msg=document.getElementById(`fb_${childId}`).value.trim(); if(!msg) return; parentFeedbacks.push({ parentId:currentUser.id, childId, message:msg, date:new Date().toLocaleString(), reply:null, replyDate:null }); saveToLocal(); alert('بازخورد شما با موفقیت ثبت شد'); showParentPanel(); addNotification(1, "بازخورد والدین", `بازخورد جدید از ${currentUser.fullName} برای ${users.find(u=>u.id===childId)?.fullName}: ${msg.substring(0,50)}...`, "parentFeedback"); }; }); }
+function showParentPanel(){ if(currentUser.role!=='parent') return alert('دسترسی محدود به والدین'); let children=users.filter(u=>currentUser.childrenIds?.includes(u.id)); if(!children.length){ alert('هیچ فرزندی برای شما ثبت نشده است'); return; } let html=`<button class="back-btn" style="margin-bottom:15px;" onclick="backToRoleMenu()">⬅️ بازگشت</button><h3>👪 وضعیت فرزندان</h3>`; children.forEach(child=>{ let childResults=quizResults.filter(r=>r.userId===child.id); let attList=Object.entries(attendance).map(([d,obj])=>({date:d,status:obj[child.username]})).filter(a=>a.status); html+=`<div class="card"><h4>${child.fullName}</h4><p>⭐ امتیاز: ${child.score===Infinity?'∞':child.score}</p><p>📝 نمرات آزمون: ${childResults.map(r=>r.score).join(', ')||'هیچ'}</p><p>📋 حضور: ${attList.map(a=>`${a.date}: ${a.status==='present'?'حاضر':'غایب'}`).join(' , ')||'ثبتی نیست'}</p><textarea id="fb_${child.id}" rows="2" placeholder="بازخورد خود را برای مربیان بنویسید..."></textarea><button class="btn-success" data-child="${child.id}">ارسال بازخورد</button><hr><h5>پاسخ مربیان:</h5><div id="replies_${child.id}">`; let replies=parentFeedbacks.filter(fb=>fb.childId===child.id && fb.reply); if(replies.length) replies.forEach(r=>html+=`<div><strong>پاسخ:</strong> ${r.reply} (${r.replyDate})</div>`); else html+=`<div>هیچ پاسخی ثبت نشده است.</div>`; html+=`</div></div>`; }); document.getElementById('content-area').innerHTML=html; document.querySelectorAll('[data-child]').forEach(btn=>{ btn.onclick=()=>{ let childId=parseInt(btn.dataset.child); let msg=document.getElementById(`fb_${childId}`).value.trim(); if(!msg) return; parentFeedbacks.push({ parentId:currentUser.id, childId, message:msg, date:new Date().toLocaleString(), reply:null, replyDate:null }); saveToLocal(); alert('بازخورد شما با موفقیت ثبت شد'); showParentPanel(); addNotification(1, "بازخورد والدین", `بازخورد جدید از ${currentUser.fullName} برای ${users.find(u=>u.id===childId)?.fullName}: ${msg.substring(0,50)}...`, "parentFeedback"); }; }); }
 function manageParentFeedbacks(){ if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('فقط مدیر و جانشین'); let pending=parentFeedbacks.filter(fb=>!fb.reply); if(!pending.length){ alert('هیچ بازخورد پاسخ داده نشده‌ای وجود ندارد'); return; } let html=`<h3>📝 پاسخ به بازخورد والدین</h3>`; pending.forEach((fb,idx)=>{ let parent=users.find(u=>u.id===fb.parentId); let child=users.find(u=>u.id===fb.childId); html+=`<div class="card"><div><strong>از: ${parent?.fullName}</strong> درباره ${child?.fullName}</div><div>${fb.message}</div><div>تاریخ: ${fb.date}</div><textarea id="reply_${idx}" rows="2" placeholder="پاسخ خود را بنویسید..."></textarea><button class="btn-success" data-idx="${idx}">ارسال پاسخ</button></div>`; }); document.getElementById('content-area').innerHTML=html; document.querySelectorAll('[data-idx]').forEach(btn=>{ btn.onclick=()=>{ let idx=parseInt(btn.dataset.idx); let reply=document.getElementById(`reply_${idx}`).value.trim(); if(!reply) return; parentFeedbacks[idx].reply=reply; parentFeedbacks[idx].replyDate=new Date().toLocaleString(); saveToLocal(); addNotification(parentFeedbacks[idx].parentId, "پاسخ به بازخورد شما", `پاسخ مدیر: ${reply.substring(0,50)}...`, ""); alert("پاسخ ذخیره شد"); manageParentFeedbacks(); }; }); }
 
 // ---------------------------- نظرسنجی و وظایف ----------------------------
@@ -1297,6 +1297,32 @@ function backToManagement(){
     ];
     showCategoryPage('👑 مدیریت', managementItems);
 }
+    function backToRoleMenu(){
+    let items = [];
+    
+    if (currentUser.role === 'interior_minister' || currentUser.role === 'governor') {
+        items = [['📋 مدیریت حضور و غیاب', showAttendance]];
+    } else if (currentUser.role === 'prime_minister') {
+        items = [['✅ مدیریت تایید وزرا', showMinisterApproval]];
+    } else if (currentUser.role === 'supreme_advisor') {
+        items = [['📝 مدیریت ارزیابی', showAdvisorEvaluation]];
+    } else if (currentUser.role === 'parent') {
+        items = [['👪 مشاهده فرزندان', showParentPanel]];
+    }
+    
+    if (items.length === 0) {
+        backToMainMenu();
+        return;
+    }
+    
+    let title = '';
+    if (currentUser.role === 'interior_minister' || currentUser.role === 'governor') title = '📋 حضور و غیاب';
+    else if (currentUser.role === 'prime_minister') title = '✅ تایید وزرا';
+    else if (currentUser.role === 'supreme_advisor') title = '📝 ارزیابی';
+    else if (currentUser.role === 'parent') title = '👪 پنل والدین';
+    
+    showCategoryPage(title, items);
+    }
 async function exportBackupAsQR() { const fullData = { users, programs, puzzles, solvedPuzzles, messages, chatMemory, quizzes, quizResults, attendance, ministerApproval, advisorEvaluation, parentFeedbacks, examSettings, polls, tasks, notifications, activityLog, userReferrals, transactions, gallery, classes }; const jsonStr = JSON.stringify(fullData); const blob = new Blob([jsonStr], {type: "application/json"}); const url = URL.createObjectURL(blob); const qr = qrcode(0, 'M'); qr.addData(url); qr.make(); const cellSize = 4; const qrCanvas = qr.createImgTag(cellSize); const modalDiv = document.createElement('div'); modalDiv.className = 'modal'; modalDiv.innerHTML = `<div class="modal-content"><h3>📸 بکاپ با QR</h3><div class="qr-canvas">${qrCanvas}</div><p>این QR شامل لینک دانلود فایل بکاپ است. با اسکن آن توسط گزینه «ورود با اسکن QR» می‌توانید بکاپ را بازیابی کنید.</p><a href="${url}" download="yare_backup_${Date.now()}.json" class="btn-success">⬇️ دانلود مستقیم فایل</a><br><button id="closeQRModal" class="btn">بستن</button></div>`; document.body.appendChild(modalDiv); document.getElementById('closeQRModal').onclick = () => { URL.revokeObjectURL(url); modalDiv.remove(); }; }
 function startAutoSave(){
     if(autoSaveInterval) clearInterval(autoSaveInterval);
