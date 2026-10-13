@@ -1275,6 +1275,31 @@ function backToMainMenu(){
     menuDiv.style.display = 'flex';
     contentArea.innerHTML = '<div class="card">از منوی بالا انتخاب کنید.</div>';
     window.scrollTo(0, 0);
+    function backToRoleMenu(){
+    let items = [];
+    let title = '';
+    
+    if (currentUser.role === 'interior_minister' || currentUser.role === 'governor') {
+        items = [['📋 مدیریت حضور و غیاب', showAttendance]];
+        title = '📋 حضور و غیاب';
+    } else if (currentUser.role === 'prime_minister') {
+        items = [['✅ مدیریت تایید وزرا', showMinisterApproval]];
+        title = '✅ تایید وزرا';
+    } else if (currentUser.role === 'supreme_advisor') {
+        items = [['📝 مدیریت ارزیابی', showAdvisorEvaluation]];
+        title = '📝 ارزیابی';
+    } else if (currentUser.role === 'parent') {
+        items = [['👪 مشاهده فرزندان', showParentPanel]];
+        title = '👪 پنل والدین';
+    }
+    
+    if (items.length === 0) {
+        backToMainMenu();
+        return;
+    }
+    
+    showCategoryPage(title, items);
+}
 }
 function showAdvancedReports() { let html = `<div class="card"><h3>📊 گزارش‌های آماری</h3><canvas id="statsChart" width="400" height="200"></canvas><button id="exportPdfReport" class="btn-purple">📄 خروجی PDF</button><button id="backToMenu" class="btn">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; const ctx = document.getElementById('statsChart').getContext('2d'); const groups = {}; users.forEach(u => { if(u.group && u.role !== 'admin') { groups[u.group] = (groups[u.group] || 0) + u.score; } }); new Chart(ctx, { type: 'bar', data: { labels: Object.keys(groups), datasets: [{ label: 'مجموع امتیازات گروه', data: Object.values(groups), backgroundColor: '#2c7da0' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } }); document.getElementById('exportPdfReport').onclick = () => { html2pdf().from(document.getElementById('content-area')).save(); }; document.getElementById('backToMenu').onclick = () => renderMainMenu(); }
 function backToManagement(){
