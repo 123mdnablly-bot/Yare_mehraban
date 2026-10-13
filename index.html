@@ -534,8 +534,8 @@ function printSmartCard(userId){ let user=users.find(u=>u.id===userId); if(!user
 function showManageUsers(){
     if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('دسترسی غیرمجاز');
     let searchHtml = `<div class="flex"><input type="text" id="searchUser" placeholder="جستجو..."><select id="sortUsers"><option value="score">مرتب‌سازی بر اساس امتیاز</option><option value="name">بر اساس نام</option></select><button id="applySearchBtn" class="btn-success">اعمال</button></div>`;
-    alert('✅ searchHtml ساخته شد: ' + typeof searchHtml);
     let html = `<button class="back-btn" style="margin-bottom:15px;" onclick="backToManagement()">⬅️ بازگشت</button><h3>👥 مدیریت کاربران</h3>${searchHtml}<div id="usersList"></div><hr><h4>➕ افزودن کاربر جدید</h4><input id="nfn" placeholder="نام کامل"><input id="nun" placeholder="نام کاربری"><input id="npw" type="password"><select id="nrl"><option>teen</option><option>parent</option><option>deputy</option><option>governor</option><option>supreme_advisor</option><option>prime_minister</option><option>interior_minister</option><option>support_minister</option></select><select id="ngroup"><option value="">بدون گروه</option><option value="A">گروه A</option><option value="B">گروه B</option><option value="C">گروه C</option><option value="D">گروه D</option></select><button id="addUserBtn" class="btn-success">افزودن</button>`;
+    alert('✅ html ساخته شد');
     function renderUsersList(){
         let searchTerm = document.getElementById('searchUser')?.value.toLowerCase() || '';
         let sortType = document.getElementById('sortUsers')?.value || 'score';
