@@ -1219,6 +1219,7 @@ function addSubmenu(parent, title, items){
 }
 
 function showCategoryPage(title, items){
+function showCategoryPage(title, items){
     let menuDiv = document.getElementById('menu-buttons');
     let contentArea = document.getElementById('content-area');
     
@@ -1236,31 +1237,24 @@ function showCategoryPage(title, items){
     contentArea.innerHTML = html;
     
     let itemsDiv = document.getElementById('categoryItems');
-    let isManagement = title.includes('مدیریت');
     
     items.forEach(([text, func]) => {
         let itemBtn = document.createElement('button');
         itemBtn.className = 'category-item-btn';
         itemBtn.innerHTML = text;
         itemBtn.onclick = () => {
-            // اگه از منوی مدیریت باز شده، تابع رو با wrap صدا بزن
-            if (isManagement) {
-                // تابع رو صدا بزن، ولی بعدش دکمه بازگشت رو اضافه کن
-                func();
-                setTimeout(() => {
-                    let contentArea2 = document.getElementById('content-area');
-                    if (contentArea2 && !contentArea2.querySelector('.back-to-mgmt')) {
-                        let backBtn = document.createElement('button');
-                        backBtn.className = 'back-btn back-to-mgmt';
-                        backBtn.style.cssText = 'margin-bottom:15px; display:block;';
-                        backBtn.innerHTML = '⬅️ بازگشت به مدیریت';
-                        backBtn.onclick = backToManagement;
-                        contentArea2.insertBefore(backBtn, contentArea2.firstChild);
-                    }
-                }, 50);
-            } else {
-                func();
-            }
+            func();
+            setTimeout(() => {
+                let ca = document.getElementById('content-area');
+                if (ca && !ca.querySelector('.universal-back-btn')) {
+                    let backBtn = document.createElement('button');
+                    backBtn.className = 'back-btn universal-back-btn';
+                    backBtn.style.cssText = 'margin-bottom:15px; display:block;';
+                    backBtn.innerHTML = '⬅️ بازگشت';
+                    backBtn.onclick = () => showCategoryPage(title, items);
+                    ca.insertBefore(backBtn, ca.firstChild);
+                }
+            }, 50);
         };
         itemsDiv.appendChild(itemBtn);
     });
