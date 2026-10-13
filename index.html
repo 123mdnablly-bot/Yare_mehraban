@@ -1359,17 +1359,22 @@ function backToManagement(){
     ];
     showCategoryPage('👑 مدیریت', managementItems);
 }
-    function backToRoleMenu(){
+     function backToRoleMenu(){
     let items = [];
+    let title = '';
     
     if (currentUser.role === 'interior_minister' || currentUser.role === 'governor') {
         items = [['📋 مدیریت حضور و غیاب', showAttendance]];
+        title = '📋 حضور و غیاب';
     } else if (currentUser.role === 'prime_minister') {
         items = [['✅ مدیریت تایید وزرا', showMinisterApproval]];
+        title = '✅ تایید وزرا';
     } else if (currentUser.role === 'supreme_advisor') {
         items = [['📝 مدیریت ارزیابی', showAdvisorEvaluation]];
+        title = '📝 ارزیابی';
     } else if (currentUser.role === 'parent') {
         items = [['👪 مشاهده فرزندان', showParentPanel]];
+        title = '👪 پنل والدین';
     }
     
     if (items.length === 0) {
@@ -1377,14 +1382,9 @@ function backToManagement(){
         return;
     }
     
-    let title = '';
-    if (currentUser.role === 'interior_minister' || currentUser.role === 'governor') title = '📋 حضور و غیاب';
-    else if (currentUser.role === 'prime_minister') title = '✅ تایید وزرا';
-    else if (currentUser.role === 'supreme_advisor') title = '📝 ارزیابی';
-    else if (currentUser.role === 'parent') title = '👪 پنل والدین';
-    
     showCategoryPage(title, items);
-    }
+}
+
 async function exportBackupAsQR() { const fullData = { users, programs, puzzles, solvedPuzzles, messages, chatMemory, quizzes, quizResults, attendance, ministerApproval, advisorEvaluation, parentFeedbacks, examSettings, polls, tasks, notifications, activityLog, userReferrals, transactions, gallery, classes }; const jsonStr = JSON.stringify(fullData); const blob = new Blob([jsonStr], {type: "application/json"}); const url = URL.createObjectURL(blob); const qr = qrcode(0, 'M'); qr.addData(url); qr.make(); const cellSize = 4; const qrCanvas = qr.createImgTag(cellSize); const modalDiv = document.createElement('div'); modalDiv.className = 'modal'; modalDiv.innerHTML = `<div class="modal-content"><h3>📸 بکاپ با QR</h3><div class="qr-canvas">${qrCanvas}</div><p>این QR شامل لینک دانلود فایل بکاپ است. با اسکن آن توسط گزینه «ورود با اسکن QR» می‌توانید بکاپ را بازیابی کنید.</p><a href="${url}" download="yare_backup_${Date.now()}.json" class="btn-success">⬇️ دانلود مستقیم فایل</a><br><button id="closeQRModal" class="btn">بستن</button></div>`; document.body.appendChild(modalDiv); document.getElementById('closeQRModal').onclick = () => { URL.revokeObjectURL(url); modalDiv.remove(); }; }
 function startAutoSave(){
     if(autoSaveInterval) clearInterval(autoSaveInterval);
