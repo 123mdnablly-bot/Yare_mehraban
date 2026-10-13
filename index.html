@@ -191,6 +191,91 @@ window.addEventListener('load', () => {
         .qr-canvas{display:inline-block;margin:10px auto;}
         @media print { body * { visibility: hidden; } .print-report, .print-report * { visibility: visible; } .print-report { position: absolute; top: 0; right: 0; width: 100%; background: white; padding: 20px; } }
         @media (max-width:700px){.title{font-size:1rem;}}
+        /* ============ استایل دسته‌بندی صفحه جدید ============ */
+.category-btn {
+    padding: 18px 22px;
+    font-size: 15px;
+    background: #2c7da0;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 150px;
+    font-weight: 700;
+    font-family: inherit;
+    box-shadow: 0 4px 10px rgba(44,125,160,0.25);
+    transition: all 0.2s;
+    margin: 4px;
+}
+
+.category-btn:active {
+    transform: scale(0.95);
+}
+
+.category-page {
+    padding: 15px 5px;
+    min-height: 60vh;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+
+.category-header h2 {
+    margin: 0;
+    color: #2c3e50;
+    flex: 1;
+    font-size: 20px;
+}
+
+.back-btn {
+    background: #c44536;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 30px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 4px 10px rgba(196,69,54,0.25);
+}
+
+.back-btn:active { transform: scale(0.95); }
+
+.category-item-btn {
+    width: 100%;
+    padding: 20px;
+    font-size: 15px;
+    background: #f8fafc;
+    color: #2c3e50;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    cursor: pointer;
+    text-align: right;
+    margin: 10px 0;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.category-item-btn:active {
+    background: #2c7da0;
+    color: white;
+    transform: scale(0.98);
+    border-color: #2c7da0;
+}
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -1125,7 +1210,51 @@ function toJalali(gy,gm,gd){ let g_d_m=[0,31,59,90,120,151,181,212,243,273,304,3
 function getCurrentJalali(){ let d=new Date(); let j=toJalali(d.getFullYear(),d.getMonth()+1,d.getDate()); return `${j.year}/${j.month.toString().padStart(2,'0')}/${j.day.toString().padStart(2,'0')}`; }
 function showReminder(){ let today=getCurrentJalali(); let upcoming=[]; for(let p of programs){ let progDate=p.date; if(progDate>today){ let diff=parseInt(progDate.split('/')[2])-parseInt(today.split('/')[2]); if(diff<=3 && diff>=0) upcoming.push(p); } } let reminderDiv=document.getElementById("reminder-area"); if(upcoming.length){ reminderDiv.style.display="block"; reminderDiv.innerHTML=`<strong>⏰ یادآور:</strong> برنامه‌های نزدیک: ${upcoming.map(p=>p.name).join(' , ')}`; } else reminderDiv.style.display="none"; }
 function smartReminder(){ let today = new Date().toISOString().slice(0,10); for(let task of tasks){ if(task.deadline && task.deadline < today && !task.completedBy.includes(currentUser.id)){ addNotification(currentUser.id, "⏰ وظیفه عقب افتاده", `وظیفه "${task.title}" با مهلت ${task.deadline} انجام نشده است.`, "tasks"); } } let userAttendance = Object.entries(attendance).filter(([date,rec]) => rec[currentUser.username] === 'present').map(([d])=>d); if(userAttendance.length < 5 && Object.keys(attendance).length > 10){ addNotification(currentUser.id, "📋 هشدار غیبت", "شما در این ماه کمتر از ۵ روز حضور داشته‌اید. لطفاً تلاش کنید.", ""); } let jalali = getCurrentJalali(); let occasions = { "1404/01/01": "🎉 نوروز مبارک!", "1404/02/14": "📅 ولادت امام علی(ع)", "1404/11/22": "🇮🇷 پیروزی انقلاب" }; if(occasions[jalali]) addNotification(currentUser.id, "مناسبت امروز", occasions[jalali], ""); }
-function addSubmenu(parent, title, items){ let div=document.createElement('div'); div.className='submenu'; let sum=document.createElement('summary'); sum.innerHTML=`<span style="font-weight:bold;">📁 ${title}</span>`; div.appendChild(sum); items.forEach(([text,func])=>{ let btn=document.createElement('button'); btn.textContent=text; btn.onclick=func; div.appendChild(btn); }); parent.appendChild(div); }
+function addSubmenu(parent, title, items){
+    let btn = document.createElement('button');
+    btn.className = 'category-btn';
+    btn.innerHTML = title;
+    btn.onclick = () => showCategoryPage(title, items);
+    parent.appendChild(btn);
+}
+
+function showCategoryPage(title, items){
+    let menuDiv = document.getElementById('menu-buttons');
+    let contentArea = document.getElementById('content-area');
+    
+    menuDiv.style.display = 'none';
+    
+    let html = `
+        <div class="category-page">
+            <div class="category-header">
+                <button class="back-btn" onclick="backToMainMenu()">⬅️ بازگشت</button>
+                <h2>${title}</h2>
+            </div>
+            <div class="category-items" id="categoryItems"></div>
+        </div>
+    `;
+    contentArea.innerHTML = html;
+    
+    let itemsDiv = document.getElementById('categoryItems');
+    items.forEach(([text, func]) => {
+        let itemBtn = document.createElement('button');
+        itemBtn.className = 'category-item-btn';
+        itemBtn.innerHTML = text;
+        itemBtn.onclick = () => func();
+        itemsDiv.appendChild(itemBtn);
+    });
+    
+    window.scrollTo(0, 0);
+}
+
+function backToMainMenu(){
+    let menuDiv = document.getElementById('menu-buttons');
+    let contentArea = document.getElementById('content-area');
+    
+    menuDiv.style.display = 'flex';
+    contentArea.innerHTML = '<div class="card">از منوی بالا انتخاب کنید.</div>';
+    window.scrollTo(0, 0);
+}
 function showAdvancedReports() { let html = `<div class="card"><h3>📊 گزارش‌های آماری</h3><canvas id="statsChart" width="400" height="200"></canvas><button id="exportPdfReport" class="btn-purple">📄 خروجی PDF</button><button id="backToMenu" class="btn">بازگشت</button></div>`; document.getElementById('content-area').innerHTML = html; const ctx = document.getElementById('statsChart').getContext('2d'); const groups = {}; users.forEach(u => { if(u.group && u.role !== 'admin') { groups[u.group] = (groups[u.group] || 0) + u.score; } }); new Chart(ctx, { type: 'bar', data: { labels: Object.keys(groups), datasets: [{ label: 'مجموع امتیازات گروه', data: Object.values(groups), backgroundColor: '#2c7da0' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } }); document.getElementById('exportPdfReport').onclick = () => { html2pdf().from(document.getElementById('content-area')).save(); }; document.getElementById('backToMenu').onclick = () => renderMainMenu(); }
 async function exportBackupAsQR() { const fullData = { users, programs, puzzles, solvedPuzzles, messages, chatMemory, quizzes, quizResults, attendance, ministerApproval, advisorEvaluation, parentFeedbacks, examSettings, polls, tasks, notifications, activityLog, userReferrals, transactions, gallery, classes }; const jsonStr = JSON.stringify(fullData); const blob = new Blob([jsonStr], {type: "application/json"}); const url = URL.createObjectURL(blob); const qr = qrcode(0, 'M'); qr.addData(url); qr.make(); const cellSize = 4; const qrCanvas = qr.createImgTag(cellSize); const modalDiv = document.createElement('div'); modalDiv.className = 'modal'; modalDiv.innerHTML = `<div class="modal-content"><h3>📸 بکاپ با QR</h3><div class="qr-canvas">${qrCanvas}</div><p>این QR شامل لینک دانلود فایل بکاپ است. با اسکن آن توسط گزینه «ورود با اسکن QR» می‌توانید بکاپ را بازیابی کنید.</p><a href="${url}" download="yare_backup_${Date.now()}.json" class="btn-success">⬇️ دانلود مستقیم فایل</a><br><button id="closeQRModal" class="btn">بستن</button></div>`; document.body.appendChild(modalDiv); document.getElementById('closeQRModal').onclick = () => { URL.revokeObjectURL(url); modalDiv.remove(); }; }
 function startAutoSave(){
@@ -1153,16 +1282,27 @@ function renderMainMenu(){
     addSubmenu(menuDiv,'📊 گزارشات',[['نمودار و PDF',showAdvancedReports]]);
     addSubmenu(menuDiv,'💰 مدیریت مالی',[['نمایش',showFinancialManagement],['خروجی CSV تراکنش‌ها',()=>exportTransactionsCSV()]]);
     addSubmenu(menuDiv,'🔄 ابزارها',[['مبدل تاریخ',showDateConverter],['بکاپ شخصی',exportPersonalBackup],['بازیابی شخصی',importPersonalBackup],['📸 خروجی QR (بکاپ لینک)',exportBackupAsQR],['📲 ورود با اسکن QR',importFromQR]]);
-    if(currentUser.role==='admin' || currentUser.role==='deputy'){
-        let mgmtDiv = document.createElement('div'); mgmtDiv.className='submenu';
-        let mgmtSum = document.createElement('summary'); mgmtSum.innerHTML = `<span style="font-weight:bold;">👑 مدیریت</span>`;
-        mgmtDiv.appendChild(mgmtSum);
-        let innerDiv = document.createElement('div'); innerDiv.style.marginRight='20px';
-        const mgmtItems = [['مدیریت کاربران',showManageUsers],['برنامه‌ها',showManagePrograms],['معماها',showManagePuzzles],['آزمون‌ها',manageQuizzes],['نظرسنجی‌ها',showPollManagement],['مدیریت وظایف',showTaskManagement],['پاسخ به بازخورد والدین',manageParentFeedbacks],['آمار گروهی',showGroupStats],['مدیریت کلاس‌ها',showClassManagement],['مدیریت گالری',showGallery],['مدیریت جامع اعضا',showMemberManagement],['بکاپ کامل',exportFullBackup],['خروجی CSV کاربران',exportCSV],['پشتیبان ایمیل',backupToEmail],['واردات JSON',importFullJSON],['☁️ ذخیره همه کاربران',saveAllUsersToServer]];
-        mgmtItems.forEach(([text,func])=>{ let btn=document.createElement('button'); btn.textContent=text; btn.onclick=func; innerDiv.appendChild(btn); });
-        mgmtDiv.appendChild(innerDiv);
-        menuDiv.appendChild(mgmtDiv);
-    } else if(currentUser.role==='interior_minister' || currentUser.role==='governor'){ addSubmenu(menuDiv,'📋 حضور و غیاب',[['مدیریت',showAttendance]]); }
+    if(currentUser.role==='admin' || currentUser.role==='deputy' || currentUser.role==='observer'){
+    const mgmtItems = [
+        ['👥 مدیریت کاربران', showManageUsers],
+        ['📅 برنامه‌ها', showManagePrograms],
+        ['🧩 معماها', showManagePuzzles],
+        ['📝 آزمون‌ها', manageQuizzes],
+        ['📊 نظرسنجی‌ها', showPollManagement],
+        ['📋 مدیریت وظایف', showTaskManagement],
+        ['💬 پاسخ به بازخورد والدین', manageParentFeedbacks],
+        ['📈 آمار گروهی', showGroupStats],
+        ['📚 مدیریت کلاس‌ها', showClassManagement],
+        ['🖼️ مدیریت گالری', showGallery],
+        ['👤 مدیریت جامع اعضا', showMemberManagement],
+        ['💾 بکاپ کامل', exportFullBackup],
+        ['📄 خروجی CSV کاربران', exportCSV],
+        ['📧 پشتیبان ایمیل', backupToEmail],
+        ['📂 واردات JSON', importFullJSON]
+    ];
+    addSubmenu(menuDiv, '👑 مدیریت', mgmtItems);
+    }
+    else if(currentUser.role==='interior_minister' || currentUser.role==='governor'){ addSubmenu(menuDiv,'📋 حضور و غیاب',[['مدیریت',showAttendance]]); }
     else if(currentUser.role==='prime_minister'){ addSubmenu(menuDiv,'✅ تایید وزرا',[['مدیریت',showMinisterApproval]]); }
     else if(currentUser.role==='supreme_advisor'){ addSubmenu(menuDiv,'📝 ارزیابی',[['مدیریت',showAdvisorEvaluation]]); }
     else if(currentUser.role==='parent'){ addSubmenu(menuDiv,'👪 پنل والدین',[['مشاهده فرزندان',showParentPanel]]); }
