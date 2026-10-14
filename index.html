@@ -528,7 +528,7 @@ function openCamera(cb){ let inp=document.createElement('input'); inp.type='file
 function openGalleryUpload(cb){ let inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=e=>{ if(e.target.files[0]){ let fr=new FileReader(); fr.onload=ev=>cb(ev.target.result); fr.readAsDataURL(e.target.files[0]); } }; inp.click(); }
 function getRandomEmoji(){ return ['😀','😎','🧒','👧','👦','👩','🧑','🐱','🦊','🐻','🌟','⭐'][Math.floor(Math.random()*12)]; }
 function showProfileManager(){ let user = users.find(u=>u.id===currentUser.id); let html = `<div class="card"><h3>📸 پروفایل تصویری من</h3><div style="text-align:center;">${user.image ? `<img src="${user.image}" class="profile-img">` : `<div style="font-size:4rem;">${user.emoji || '🧒'}</div>`}</div><div class="flex"><button id="takePhotoBtn" class="btn">📷 دوربین</button><button id="uploadPhotoBtn" class="btn">🖼️ گالری</button><button id="setEmojiBtn" class="btn-warning">😀 ایموجی</button><button id="removePhotoBtn" class="btn-danger">🗑 حذف</button></div><hr><h4>اطلاعات من</h4><p><strong>نام:</strong> ${user.fullName}</p><p><strong>نقش:</strong> ${user.role}</p><p><strong>گروه:</strong> ${user.group||'ندارد'}</p><p><strong>امتیاز:</strong> ${user.score===Infinity?'∞':user.score}</p><hr><h4>🏆 دستاوردهای من</h4><div id="myAchievements"></div><hr><h4>📝 یادداشت شخصی</h4><textarea id="personalNote" rows="3">${user.personalNote || ''}</textarea><button id="saveNoteBtn" class="btn-success">💾 ذخیره یادداشت</button><div class="flex"><button id="viewMyActivityBtn" class="btn-purple">📜 فعالیت‌های من</button><button id="printMyReportBtn" class="btn-warning">🖨️ کارنامه من</button></div><hr><h4>🔗 کد معرف</h4><p>کد شما: <strong>${user.referralCode}</strong></p><p>تعداد معرفی‌ها: ${userReferrals[user.id] ? Object.keys(userReferrals[user.id]).length : 0}</p></div>`; document.getElementById('content-area').innerHTML = html; let achDiv = document.getElementById('myAchievements'); let earned = user.achievements || []; achDiv.innerHTML = achievementsList.map(ach => `<span class="achievement-badge" style="background:${earned.includes(ach.id)?'#f1c40f':'#95a5a6'};">${ach.title} ${earned.includes(ach.id)?'✅':'❌'}</span>`).join(''); document.getElementById('takePhotoBtn')?.addEventListener('click',()=> openCamera((img)=>{ user.image=img; user.emoji=null; saveToLocal(); showProfileManager(); })); document.getElementById('uploadPhotoBtn')?.addEventListener('click',()=> openGalleryUpload((img)=>{ user.image=img; user.emoji=null; saveToLocal(); showProfileManager(); })); document.getElementById('setEmojiBtn')?.addEventListener('click',()=>{ let em=prompt("ایموجی:",getRandomEmoji()); if(em){ user.emoji=em; user.image=null; saveToLocal(); showProfileManager(); } }); document.getElementById('removePhotoBtn')?.addEventListener('click',()=>{ user.image=null; user.emoji='🧒'; saveToLocal(); showProfileManager(); }); document.getElementById('saveNoteBtn')?.addEventListener('click',()=>{ user.personalNote = document.getElementById('personalNote').value; saveToLocal(); alert("یادداشت ذخیره شد"); }); document.getElementById('viewMyActivityBtn')?.addEventListener('click',()=> showUserActivity(currentUser.id)); document.getElementById('printMyReportBtn')?.addEventListener('click',()=> printUserReport(currentUser.id)); }
-function printSmartCard(userId){ let user=users.find(u=>u.id===userId); if(!user) return; let roleMap={admin:'مدیر',deputy:'جانشین',prime_minister:'مسئول تایید شورا',interior_minister:'مسئول حضور و غیاب',support_minister:'مسئول پشتیبانی',supreme_advisor:'مشاور کانون',teen:'نوجوان',parent:'والد',governor:'فرماندار'}; let parent=users.find(p=>p.childrenIds?.includes(user.id)); let win=window.open('','_blank'); win.document.write(`<html dir="rtl"><head><title>کارت هوشمند ${user.fullName}</title><style>body{font-family:sans-serif;padding:20px;} .card{max-width:400px;margin:auto;border:2px solid #2c7da0;border-radius:28px;padding:20px;text-align:center;}</style></head><body><div class="card"><div class="header">🏛️ کانون فرهنگی هنری امیرالمومنین (ع)</div><div>${user.image?`<img src="${user.image}" style="width:80px;border-radius:50%;">`:`<div style="font-size:4rem;">${user.emoji||'🧑'}</div>`}</div><h3>${user.fullName}</h3><p>نقش: ${roleMap[user.role]}<br>نام کاربری: ${user.username}<br>امتیاز: ${user.score===Infinity?'∞':user.score}<br>والد: ${parent?parent.fullName:'—'}<br>گروه: ${user.group||'—'}</p><div>📅 ${new Date().toLocaleDateString('fa-IR')}</div></div></body></html>`); win.print(); win.close(); }
+function printSmartCard(userId){ let user=users.find(u=>u.id===userId); if(!user) return; let roleMap={admin:'مدیر',deputy:'جانشین',prime_minister:'وزیر اعظم',interior_minister:'وزیر کشور',support_minister:'وزیر پشتیبانی',supreme_advisor:'مشاور اعظم',teen:'نوجوان',parent:'والد',governor:'فرماندار'}; let parent=users.find(p=>p.childrenIds?.includes(user.id)); let win=window.open('','_blank'); win.document.write(`<html dir="rtl"><head><title>کارت هوشمند ${user.fullName}</title><style>body{font-family:sans-serif;padding:20px;} .card{max-width:400px;margin:auto;border:2px solid #2c7da0;border-radius:28px;padding:20px;text-align:center;}</style></head><body><div class="card"><div class="header">🏛️ کانون فرهنگی هنری امیرالمومنین (ع)</div><div>${user.image?`<img src="${user.image}" style="width:80px;border-radius:50%;">`:`<div style="font-size:4rem;">${user.emoji||'🧑'}</div>`}</div><h3>${user.fullName}</h3><p>نقش: ${roleMap[user.role]}<br>نام کاربری: ${user.username}<br>امتیاز: ${user.score===Infinity?'∞':user.score}<br>والد: ${parent?parent.fullName:'—'}<br>گروه: ${user.group||'—'}</p><div>📅 ${new Date().toLocaleDateString('fa-IR')}</div></div></body></html>`); win.print(); win.close(); }
 
 // ---------------------------- مدیریت کامل کاربران ----------------------------
 function showManageUsers(){
@@ -544,8 +544,8 @@ function showManageUsers(){
         else filtered.sort((a,b)=>a.fullName.localeCompare(b.fullName));
         let listHtml = '';
         filtered.forEach(u => {
-            let roleMap={admin:'مدیر',deputy:'جانشین',supreme_advisor:'مسئول تایید شورا',prime_minister:' مسئول برسی نوجوانان',interior_minister:'مسئول حضور غياب',support_minister:'مسئول پشتیبانی,teen:'نوجوان',parent:'والد',governor:'مدیر گروه'};
-            listHtml += `<div class="user-row"><div><strong>${u.fullName}</strong> (${u.username}) - ${roleMap[u.role]||u.role}<br>⭐ امتیاز: ${u.score===Infinity?'∞':u.score} | گروه: ${u.group||'ندارد'}</div><div><select class="groupSelect" data-id="${u.id}"><option value="">بدون گروه</option><option value="A" ${u.group==='A'?'selected':''}>گروه A</option><option value="B" ${u.group==='B'?'selected':''}>گروه B</option><option value="C" ${u.group==='C'?'selected':''}>گروه C</option><option value="D" ${u.group==='D'?'selected':''}>گروه D</option></select><button class="btn-success" onclick="changeScore(${u.id},5)">+5</button><button class="btn-warning" onclick="changeScore(${u.id},-5)">-5</button><button class="btn-purple" onclick="customScore(${u.id})">✏️ امتیاز</button>${u.id!==13?`<button class="btn-danger" onclick="deleteUser(${u.id})">🗑</button>`:''}<button class="btn" onclick="editUser(${u.id})">✏️</button><button class="btn-purple" onclick="printSmartCard(${u.id})">🖨️ پرینت</button><button class="btn" onclick="showUserAchievements(${u.id})">🏆</button><button class="btn" onclick="showUserActivity(${u.id})">📜</button><button class="btn-warning" onclick="printUserReport(${u.id})">📄</button></div></div>`;
+            let roleMap={admin:'مدیر',deputy:'جانشین',supreme_advisor:'مشاور اعظم',prime_minister:'وزیر اعظم',interior_minister:'وزیر کشور',support_minister:'وزیر پشتیبانی',teen:'نوجوان',parent:'والد',governor:'فرماندار'};
+            listHtml += `<div class="user-row"><div><strong>${u.fullName}</strong> (${u.username}) - ${roleMap[u.role]||u.role}<br>⭐ امتیاز: ${u.score===Infinity?'∞':u.score} | گروه: ${u.group||'ندارد'}</div><div><select class="groupSelect" data-id="${u.id}"><option value="">بدون گروه</option><option value="A" ${u.group==='A'?'selected':''}>گروه A</option><option value="B" ${u.group==='B'?'selected':''}>گروه B</option><option value="C" ${u.group==='C'?'selected':''}>گروه C</option><option value="D" ${u.group==='D'?'selected':''}>گروه D</option></select><button class="btn-success" onclick="changeScore(${u.id},5)">+5</button><button class="btn-warning" onclick="changeScore(${u.id},-5)">-5</button>${u.id!==13?`<button class="btn-danger" onclick="deleteUser(${u.id})">🗑</button>`:''}<button class="btn" onclick="editUser(${u.id})">✏️</button><button class="btn-purple" onclick="printSmartCard(${u.id})">🖨️ پرینت</button><button class="btn" onclick="showUserAchievements(${u.id})">🏆</button><button class="btn" onclick="showUserActivity(${u.id})">📜</button><button class="btn-warning" onclick="printUserReport(${u.id})">📄</button></div></div>`;
         });
         document.getElementById('usersList').innerHTML = listHtml;
         document.querySelectorAll('.groupSelect').forEach(sel => {
@@ -566,30 +566,6 @@ function showManageUsers(){
         saveToLocal(); showManageUsers();
     };
     document.getElementById('applySearchBtn').onclick = ()=>{ renderUsersList(); };
-}
-function customScore(uid){
-    let u = users.find(x => x.id === uid);
-    if(!u) return;
-    let val = prompt('امتیاز جدید برای ' + u.fullName + ':\n(عدد وارد کن)', u.score === Infinity ? 0 : u.score);
-    if(val === null) return;
-    let num = parseInt(val);
-    if(isNaN(num)){
-        alert('❌ لطفاً یک عدد وارد کن');
-        return;
-    }
-    if(u.score === Infinity && num <= 0){
-        alert('امتیاز مدیر ارشد قابل تغییر نیست');
-        return;
-    }
-    u.score = num;
-    saveToLocal();
-    if(currentUser.id === uid) currentUser.score = num;
-    cloudSaveUser(u);
-    checkAndGrantAchievements(uid);
-    if(document.getElementById('usersList')) showManageUsers();
-    else renderMainMenu();
-    updateWelcome();
-    alert('✅ امتیاز ' + u.fullName + ' به ' + num + ' تغییر کرد');
 }
 function changeScore(uid,delta){
     let u=users.find(u=>u.id===uid);
@@ -2069,4 +2045,4 @@ window.addEventListener('load', () => {
 });
 </script>
 </body>
-</html>
+    </html>
