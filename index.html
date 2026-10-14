@@ -1223,7 +1223,7 @@ function showClassManagement(){
                         if(enroll && !c.students.includes(uid)) c.students.push(uid);
                         else if(!enroll && c.students.includes(uid)) c.students = c.students.filter(id => id !== uid);
                         saveToLocal();
-                        btn2.click();
+                        btn.click();
                     };
                 });
             };
