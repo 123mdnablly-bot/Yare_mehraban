@@ -531,7 +531,62 @@ function showProfileManager(){ let user = users.find(u=>u.id===currentUser.id); 
 function printSmartCard(userId){ let user=users.find(u=>u.id===userId); if(!user) return; let roleMap={admin:'مدیر',deputy:'جانشین',prime_minister:'وزیر اعظم',interior_minister:'وزیر کشور',support_minister:'وزیر پشتیبانی',supreme_advisor:'مشاور اعظم',teen:'نوجوان',parent:'والد',governor:'فرماندار'}; let parent=users.find(p=>p.childrenIds?.includes(user.id)); let win=window.open('','_blank'); win.document.write(`<html dir="rtl"><head><title>کارت هوشمند ${user.fullName}</title><style>body{font-family:sans-serif;padding:20px;} .card{max-width:400px;margin:auto;border:2px solid #2c7da0;border-radius:28px;padding:20px;text-align:center;}</style></head><body><div class="card"><div class="header">🏛️ کانون فرهنگی هنری امیرالمومنین (ع)</div><div>${user.image?`<img src="${user.image}" style="width:80px;border-radius:50%;">`:`<div style="font-size:4rem;">${user.emoji||'🧑'}</div>`}</div><h3>${user.fullName}</h3><p>نقش: ${roleMap[user.role]}<br>نام کاربری: ${user.username}<br>امتیاز: ${user.score===Infinity?'∞':user.score}<br>والد: ${parent?parent.fullName:'—'}<br>گروه: ${user.group||'—'}</p><div>📅 ${new Date().toLocaleDateString('fa-IR')}</div></div></body></html>`); win.print(); win.close(); }
 
 // ---------------------------- مدیریت کامل کاربران ----------------------------
-function showManageUsers(){
+// ============ امتیازدهی سریع ============
+function showQuickScore(){
+    if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('دسترسی غیرمجاز');
+    
+    let html = '<button class="back-btn" style="margin-bottom:15px;" onclick="backToManagement()">⬅️ بازگشت</button>';
+    html += '<div class="card"><h3>🎯 امتیازدهی سریع</h3>';
+    html += '<p style="color:#666; font-size:13px;">روی کاربر بزن و امتیاز دلخواه بده (مثبت یا منفی)</p>';
+    html += '<div class="flex" style="margin-bottom:10px;"><input type="text" id="quickSearch" placeholder="جستجوی نام یا نام کاربری..." style="flex:1;"></div>';
+    html += '<div id="quickUserList"></div></div>';
+    document.getElementById('content-area').innerHTML = html;
+    
+    function renderQuickList(){
+        let search = (document.getElementById('quickSearch').value || '').toLowerCase();
+        let listDiv = document.getElementById('quickUserList');
+        let filtered = users.filter(u => u.id !== 13 && (search === '' || u.fullName.toLowerCase().includes(search) || u.username.toLowerCase().includes(search)));
+        
+        if(filtered.length === 0){
+            listDiv.innerHTML = '<p style="text-align:center; color:#888;">کاربری پیدا نشد</p>';
+            return;
+        }
+        
+        listDiv.innerHTML = '';
+        filtered.forEach(u => {
+            let scoreDisplay = u.score === Infinity ? '∞' : u.score;
+            let btn = document.createElement('button');
+            btn.className = 'category-item-btn';
+            btn.innerHTML = '👤 ' + u.fullName + ' <span style="color:#888; font-size:12px;">(' + u.username + ' | ID: ' + u.id + ')</span><br><span style="color:#e68a2e; font-weight:bold;">⭐ امتیاز فعلی: ' + scoreDisplay + '</span>';
+            btn.onclick = () => {
+                if(u.score === Infinity){
+                    alert('امتیاز مدیر ارشد قابل تغییر نیست');
+                    return;
+                }
+                let val = prompt('امتیاز جدید برای «' + u.fullName + '» را وارد کنید:\n(عدد مثبت = افزایش، عدد منفی = کاهش)', u.score);
+                if(val === null) return;
+                let num = parseInt(val);
+                if(isNaN(num)){
+                    alert('❌ لطفاً یک عدد صحیح وارد کنید');
+                    return;
+                }
+                u.score = num;
+                saveToLocal();
+                cloudSaveUser(u);
+                checkAndGrantAchievements(u.id);
+                alert('✅ امتیاز «' + u.fullName + '» به ' + num + ' تغییر کرد');
+                showQuickScore();
+            };
+            listDiv.appendChild(btn);
+        });
+    }
+    
+    renderQuickList();
+    
+    document.getElementById('quickSearch').oninput = renderQuickList;
+}
+
+    function showManageUsers(){
     if(currentUser.role !== 'admin' && currentUser.role !== 'deputy') return alert('دسترسی غیرمجاز');
     let searchHtml = `<div class="flex"><input type="text" id="searchUser" placeholder="جستجو..."><select id="sortUsers"><option value="score">مرتب‌سازی بر اساس امتیاز</option><option value="name">بر اساس نام</option></select><button id="applySearchBtn" class="btn-success">اعمال</button></div>`;
     let html = `<button class="back-btn" style="margin-bottom:15px;" onclick="backToManagement()">⬅️ بازگشت</button><h3>👥 مدیریت کاربران</h3>${searchHtml}<div id="usersList"></div><hr><h4>➕ افزودن کاربر جدید</h4><input id="nfn" placeholder="نام کامل"><input id="nun" placeholder="نام کاربری"><input id="npw" type="password"><select id="nrl"><option>teen</option><option>parent</option><option>deputy</option><option>governor</option><option>supreme_advisor</option><option>prime_minister</option><option>interior_minister</option><option>support_minister</option></select><select id="ngroup"><option value="">بدون گروه</option><option value="A">گروه A</option><option value="B">گروه B</option><option value="C">گروه C</option><option value="D">گروه D</option></select><button id="addUserBtn" class="btn-success">افزودن</button>`;
@@ -1412,6 +1467,7 @@ function showAdvancedReports() { let html = `<div class="card"><h3>📊 گزار
 function backToManagement(){
     let managementItems = [
         ['👥 مدیریت کاربران', showManageUsers],
+        ['🎯 امتیازدهی سریع', showQuickScore],
         ['📅 برنامه‌ها', showManagePrograms],
         ['🧩 معماها', showManagePuzzles],
         ['📝 آزمون‌ها', manageQuizzes],
