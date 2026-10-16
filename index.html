@@ -1657,7 +1657,17 @@ async function syncToCloud() {
     let synced = 0;
     for (let user of users) {
         try {
-            const { error } = await window.dbClient.from('profiles').upsert({...});
+            const { error } = await window.dbClient.from('profiles').upsert({
+                id: String(user.id),
+                username: user.username,
+                password: user.password,
+                role: user.role,
+                full_name: user.fullName,
+                score: (user.score === Infinity || user.score === null) ? 999999 : Number(user.score) || 0,
+                "group": user.group || null,
+                emoji: user.emoji || 'user',
+                referral_code: user.referralCode || null
+            });
             if (!error) synced++;
         } catch(e) {}
     }
@@ -1669,10 +1679,11 @@ async function syncToCloud() {
             await saveAttendanceToCloud(username, date, status);
         }
     }
+    
     // همگام‌سازی کلاس‌ها
-for (let cls of classes) {
-    await saveClassToCloud(cls);
-   }
+    for (let cls of classes) {
+        await saveClassToCloud(cls);
+    }
 }
 
 // وقتی اینترنت برگشت، خودکار همگام‌سازی کن
