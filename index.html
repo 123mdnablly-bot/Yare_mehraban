@@ -2037,6 +2037,51 @@ async function saveQuizResultToCloud(result) {
         });
     } catch(e) { console.error(e); }
 }
+    // ============ همگام‌سازی کلاس‌ها ============
+async function loadClassesFromCloud() {
+    if (!window.dbClient || !navigator.onLine) return;
+    try {
+        const { data, error } = await window.dbClient.from('classes').select('*');
+        if (error || !data) return;
+        for (let cc of data) {
+            let local = classes.find(c => String(c.id) === String(cc.id));
+            if (local) {
+                local.name = cc.name;
+                local.teacher = cc.teacher;
+                local.schedule = cc.schedule;
+                local.students = cc.students || [];
+                local.grades = cc.grades || [];
+            } else {
+                classes.push({
+                    id: parseInt(cc.id),
+                    name: cc.name,
+                    teacher: cc.teacher,
+                    schedule: cc.schedule,
+                    students: cc.students || [],
+                    grades: cc.grades || []
+                });
+            }
+        }
+        saveToLocal();
+        console.log('✅ ' + data.length + ' کلاس از سرور بارگذاری شد');
+    } catch(e) { console.error(e); }
+}
+
+async function saveClassToCloud(cls) {
+    if (!window.dbClient) return;
+    try {
+        await window.dbClient.from('classes').upsert({
+            id: cls.id,
+            name: cls.name,
+            teacher: cls.teacher,
+            schedule: cls.schedule,
+            students: cls.students || [],
+            grades: cls.grades || []
+        });
+        console.log('✅ کلاس در سرور ذخیره شد');
+    } catch(e) { console.error(e); }
+}
+
     init();
 
 // بعد از لود شدن صفحه، اتصال رو تست کن
