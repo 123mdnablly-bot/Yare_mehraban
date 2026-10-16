@@ -1657,27 +1657,22 @@ async function syncToCloud() {
     let synced = 0;
     for (let user of users) {
         try {
-            const { error } = await window.dbClient.from('profiles').upsert({
-                id: String(user.id),
-                username: user.username,
-                password: user.password,
-                role: user.role,
-                full_name: user.fullName,
-                score: (user.score === Infinity || user.score === null) ? 999999 : Number(user.score) || 0,
-                "group": user.group || null,
-                emoji: user.emoji || 'user',
-                referral_code: user.referralCode || null
-            });
+            const { error } = await window.dbClient.from('profiles').upsert({...});
             if (!error) synced++;
         } catch(e) {}
     }
-        console.log('☁️ همگام‌سازی: ' + synced + '/' + users.length + ' کاربر ذخیره شد');
+    console.log('☁️ همگام‌سازی: ' + synced + '/' + users.length + ' کاربر ذخیره شد');
     
     // همگام‌سازی حضور و غیاب
     for (let [date, records] of Object.entries(attendance)) {
         for (let [username, status] of Object.entries(records)) {
             await saveAttendanceToCloud(username, date, status);
         }
+    }
+    
+    // همگام‌سازی کلاس‌ها  ← این ۴ خط جدید
+    for (let cls of classes) {
+        await saveClassToCloud(cls);
     }
 }
 
