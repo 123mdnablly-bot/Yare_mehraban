@@ -1669,12 +1669,6 @@ async function syncToCloud() {
             await saveAttendanceToCloud(username, date, status);
         }
     }
-    
-    // همگام‌سازی کلاس‌ها  ← این ۴ خط جدید
-    for (let cls of classes) {
-        await saveClassToCloud(cls);
-    }
-}
 
 // وقتی اینترنت برگشت، خودکار همگام‌سازی کن
 window.addEventListener('online', () => {
